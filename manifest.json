@@ -1,0 +1,10 @@
+{
+  "name": "アパート収支シミュレーション",
+  "short_name": "収支シミュレーション",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#eef3f5",
+  "theme_color": "#12384d",
+  "lang": "ja",
+  "icons": []
+}
