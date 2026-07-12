@@ -34,6 +34,10 @@ const defaultState = {
     ["登記費用", 500000],
     ["融資事務手数料", 680000],
     ["印紙代・その他", 150000],
+    ["", 0],
+    ["", 0],
+    ["", 0],
+    ["", 0],
   ],
   rentRoll: Array.from({ length: 20 }, (_, i) => {
     const floor = Math.floor(i / 5) + 1;
@@ -53,8 +57,27 @@ function emptyRentRollRows(count = 20) {
   return Array.from({ length: count }, () => ["", "", 0, "空室"]);
 }
 
-function blankState() {
+function emptyClosingCostRows(count = 8) {
+  return Array.from({ length: count }, () => ["", 0]);
+}
+
+function normalizeClosingCosts(rows) {
+  const normalized = Array.isArray(rows)
+    ? rows.map((row) => [row?.[0] ?? "", Number(row?.[1] || 0)])
+    : [];
+  while (normalized.length < 8) normalized.push(["", 0]);
+  return normalized.slice(0, 8);
+}
+
+function normalizeState(data) {
   return {
+    ...data,
+    closingCosts: normalizeClosingCosts(data.closingCosts),
+  };
+}
+
+function blankState() {
+  return normalizeState({
     ...cloneDefault(),
     customerName: "",
     bankName: "",
@@ -78,14 +101,9 @@ function blankState() {
     propertyManagementRate: 0,
     salePriceGrowthRate: 0,
     sellingCostRate: 0,
-    closingCosts: [
-      ["", 0],
-      ["", 0],
-      ["", 0],
-      ["", 0],
-    ],
+    closingCosts: emptyClosingCostRows(),
     rentRoll: emptyRentRollRows(),
-  };
+  });
 }
 
 function loadState() {
@@ -93,7 +111,7 @@ function loadState() {
   if (!saved) return cloneDefault();
   try {
     const parsed = JSON.parse(saved);
-    return { ...cloneDefault(), ...parsed };
+    return normalizeState({ ...cloneDefault(), ...parsed });
   } catch {
     return cloneDefault();
   }
@@ -162,7 +180,7 @@ function loadCustomerRecord(id) {
     alert("顧客データが見つかりません。");
     return;
   }
-  state = { ...cloneDefault(), ...record.data };
+  state = normalizeState({ ...cloneDefault(), ...record.data });
   currentCustomerId = record.id;
   localStorage.setItem(CURRENT_CUSTOMER_KEY, currentCustomerId);
   saveState();
@@ -427,6 +445,7 @@ function renderRentroll() {
 }
 
 function renderCosts() {
+  state.closingCosts = normalizeClosingCosts(state.closingCosts);
   const rows = state.closingCosts.map((row, index) => `<tr><td><input data-cost="${index},0" type="text" value="${row[0]}"></td><td><input data-cost="${index},1" type="number" inputmode="numeric" value="${row[1]}"></td></tr>`);
   byId("costs").innerHTML = `
     <div class="panel">
