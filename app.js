@@ -26,6 +26,7 @@ const defaultState = {
   vacancyRate: 5,
   rentGrowthRate: 0,
   fixedAssetTax: 650000,
+  operatingCost: 0,
   propertyManagementRate: 5,
   salePriceGrowthRate: 1,
   sellingCostRate: 3,
@@ -98,6 +99,7 @@ function blankState() {
     vacancyRate: 0,
     rentGrowthRate: 0,
     fixedAssetTax: 0,
+    operatingCost: 0,
     propertyManagementRate: 0,
     salePriceGrowthRate: 0,
     sellingCostRate: 0,
@@ -294,7 +296,7 @@ function annualCashflow(maxYears = 30) {
     const effective = gross - vacancy;
     const managementFee = effective * rate(state.propertyManagementRate);
     const repairs = Number(state.closingCosts.repairs || 0);
-    const operatingExpense = Number(state.fixedAssetTax || 0) + managementFee;
+    const operatingExpense = Number(state.fixedAssetTax || 0) + Number(state.operatingCost || 0) + managementFee;
     const noi = effective - operatingExpense;
     const d = debt[index] || { debtService: 0, end: 0 };
     const preTaxCf = noi - d.debtService;
@@ -411,6 +413,7 @@ function renderInputs() {
         ${field("空室率（％）", "vacancyRate", "number", "0.1")}
         ${field("家賃上昇率（％）", "rentGrowthRate", "number", "0.1")}
         ${field("固定資産税等（円）", "fixedAssetTax")}
+        ${field("運営経費（年額・円）", "operatingCost")}
         ${field("管理委託料率（％）", "propertyManagementRate", "number", "0.1")}
         ${field("売却価格成長率（％）", "salePriceGrowthRate")}
         ${field("売却費用率（％）", "sellingCostRate")}
