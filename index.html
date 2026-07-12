@@ -9,9 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     <title>アパート収支シミュレーション</title>
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="manifest" href="./manifest.json?v=20260712-2" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260712-2" />
   </head>
   <body>
     <header class="app-header">
@@ -49,10 +49,10 @@
       <button id="printBtn" type="button">PDF / 印刷</button>
     </div>
 
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260712-2"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
+        navigator.serviceWorker.register("./sw.js?v=20260712-2").catch(() => {});
       }
     </script>
   </body>
