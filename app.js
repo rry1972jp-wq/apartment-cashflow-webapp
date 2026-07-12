@@ -49,6 +49,10 @@ function cloneDefault() {
   return JSON.parse(JSON.stringify(defaultState));
 }
 
+function emptyRentRollRows(count = 20) {
+  return Array.from({ length: count }, () => ["", "", 0, "空室"]);
+}
+
 function blankState() {
   return {
     ...cloneDefault(),
@@ -80,7 +84,7 @@ function blankState() {
       ["", 0],
       ["", 0],
     ],
-    rentRoll: [],
+    rentRoll: emptyRentRollRows(),
   };
 }
 
@@ -183,12 +187,22 @@ function occupiedRooms() {
   return state.rentRoll.filter((room) => room[3] === "入居中" && Number(room[2]) > 0);
 }
 
+function enteredRentRollRows() {
+  return state.rentRoll.filter((room) => {
+    const roomNumber = String(room[0] || "").trim();
+    const layout = String(room[1] || "").trim();
+    const rent = Number(room[2] || 0);
+    const status = room[3] === "入居中";
+    return Boolean(roomNumber || layout || rent > 0 || status);
+  });
+}
+
 function monthlyRent() {
   return occupiedRooms().reduce((sum, room) => sum + Number(room[2] || 0), 0);
 }
 
 function assumptions() {
-  const rooms = state.rentRoll.length;
+  const rooms = enteredRentRollRows().length;
   const avgRent = rooms ? monthlyRent() / rooms : 0;
   const closing = state.closingCosts.reduce((sum, row) => sum + Number(row[1] || 0), 0);
   const totalInvestment = Number(state.purchasePrice || 0) + closing;
@@ -391,6 +405,7 @@ function renderInputs() {
 }
 
 function renderRentroll() {
+  if (!state.rentRoll.length) state.rentRoll = emptyRentRollRows();
   const a = assumptions();
   const rows = state.rentRoll.map((room, index) => `
     <tr>
