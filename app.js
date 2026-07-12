@@ -310,6 +310,41 @@ function approxIrr(initial, total, years) {
   return Math.pow(total / initial, 1 / years) - 1;
 }
 
+function equityInvestment() {
+  const ownCapital = Number(state.ownCapital || 0);
+  const inferredEquity = Math.max(Number(state.purchasePrice || 0) - Number(state.loanAmount || 0), 0);
+  return (ownCapital || inferredEquity) + assumptions().closing;
+}
+
+function calculateIrr(cashflows) {
+  const npv = (rateValue) => cashflows.reduce((sum, value, index) => sum + value / Math.pow(1 + rateValue, index), 0);
+  let low = -0.9999;
+  let high = 10;
+  let lowValue = npv(low);
+  let highValue = npv(high);
+
+  if (!cashflows.some((value) => value < 0) || !cashflows.some((value) => value > 0)) return null;
+  while (lowValue * highValue > 0 && high < 1000) {
+    high *= 2;
+    highValue = npv(high);
+  }
+  if (lowValue * highValue > 0) return null;
+
+  for (let i = 0; i < 100; i += 1) {
+    const mid = (low + high) / 2;
+    const midValue = npv(mid);
+    if (Math.abs(midValue) < 0.01) return mid;
+    if (lowValue * midValue <= 0) {
+      high = mid;
+      highValue = midValue;
+    } else {
+      low = mid;
+      lowValue = midValue;
+    }
+  }
+  return (low + high) / 2;
+}
+
 function moneyCell(value) {
   const amount = Math.round(Number(value || 0));
   return `<td class="${amount < 0 ? "negative" : ""}">${yen.format(amount)}</td>`;
@@ -317,6 +352,10 @@ function moneyCell(value) {
 
 function pct(value) {
   return `${(Number(value || 0) * 100).toFixed(1)}%`;
+}
+
+function pctOrDash(value) {
+  return value === null || !Number.isFinite(value) ? "-" : pct(value);
 }
 
 function table(headers, rows, cls = "") {
@@ -503,8 +542,10 @@ function renderSale() {
       const sellingCost = salePrice * rate(state.sellingCostRate);
       const netProceeds = salePrice - sellingCost - row.loanEnd;
       const totalReturn = row.cumulativePreTax + netProceeds;
-      const irr = approxIrr(assumptions().totalInvestment, totalReturn, holdingYear);
-      rows.push(`<tr><td>${index === 0 ? `${holdingYear}年目` : ""}</td><td>${capRate.toFixed(1)}%</td>${moneyCell(row.gross)}${moneyCell(row.cumulativePreTax)}${moneyCell(salePrice)}${moneyCell(sellingCost)}${moneyCell(row.loanEnd)}${moneyCell(netProceeds)}${moneyCell(totalReturn)}<td>${pct(irr)}</td></tr>`);
+      const yearlyCashflows = annual.slice(0, holdingYear).map((item) => item.preTaxCf);
+      yearlyCashflows[yearlyCashflows.length - 1] += netProceeds;
+      const irr = calculateIrr([-equityInvestment(), ...yearlyCashflows]);
+      rows.push(`<tr><td>${index === 0 ? `${holdingYear}年目` : ""}</td><td>${capRate.toFixed(1)}%</td>${moneyCell(row.gross)}${moneyCell(row.cumulativePreTax)}${moneyCell(salePrice)}${moneyCell(sellingCost)}${moneyCell(row.loanEnd)}${moneyCell(netProceeds)}${moneyCell(totalReturn)}<td>${pctOrDash(irr)}</td></tr>`);
     });
   });
   byId("sale").innerHTML = `<div class="panel"><h2>売却シミュレーション</h2>${table(["保有年数", "売却条件", "年間家賃収入", "差引収益（累計）", "売却額", "売却諸費用", "ローン残債", "売却時手取額", "総回収額", "IRR"], rows)}</div>`;
