@@ -1,4 +1,4 @@
-const CACHE_NAME = "apartment-sim-v4";
+const CACHE_NAME = "apartment-sim-v6";
 const ASSETS = [
   "./",
   "./index.html",

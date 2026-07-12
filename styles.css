@@ -164,6 +164,22 @@ main {
 
 .field { display: grid; gap: 5px; }
 
+.customer-tools {
+  display: grid;
+  gap: 10px;
+}
+
+.actions-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.actions-row button {
+  min-width: 0;
+  padding-inline: 8px;
+}
+
 label {
   color: var(--muted);
   font-size: 12px;
@@ -240,6 +256,7 @@ td:first-child, th:first-child { text-align: left; }
 .bottom-actions button { flex: 1; }
 
 @media (max-width: 720px) {
+  .actions-row { grid-template-columns: 1fr 1fr; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
   main { padding: 10px; }
   .panel { padding: 12px; }

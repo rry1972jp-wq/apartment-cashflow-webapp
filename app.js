@@ -2,6 +2,9 @@ const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY",
 const number = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 1 });
 const byId = (id) => document.getElementById(id);
 const rate = (v) => Number(v || 0) / 100;
+const CURRENT_STATE_KEY = "apartment-sim-v2";
+const CUSTOMER_STORE_KEY = "apartment-sim-customers-v1";
+const CURRENT_CUSTOMER_KEY = "apartment-sim-current-customer";
 
 const defaultState = {
   customerName: "お客様",
@@ -40,13 +43,49 @@ const defaultState = {
 };
 
 let state = loadState();
+let currentCustomerId = localStorage.getItem(CURRENT_CUSTOMER_KEY) || "";
 
 function cloneDefault() {
   return JSON.parse(JSON.stringify(defaultState));
 }
 
+function blankState() {
+  return {
+    ...cloneDefault(),
+    customerName: "",
+    bankName: "",
+    propertyName: "",
+    location: "",
+    structure: "",
+    landAreaSqm: 0,
+    buildingAreaSqm: 0,
+    buildingCoverage: 0,
+    floorAreaRatio: 0,
+    builtYear: 0,
+    purchasePrice: 0,
+    ownCapital: 0,
+    loanAmount: 0,
+    loanRate: 0,
+    loanYears: 0,
+    repaymentType: "元利均等",
+    vacancyRate: 0,
+    rentGrowthRate: 0,
+    fixedAssetTax: 0,
+    propertyManagementRate: 0,
+    salePriceGrowthRate: 0,
+    sellingCostRate: 0,
+    closingCosts: [
+      ["", 0],
+      ["", 0],
+      ["", 0],
+      ["", 0],
+    ],
+    rentRoll: Array.from({ length: 20 }, () => ["", "", 0, "空室"]),
+  };
+}
+
 function loadState() {
-  const saved = localStorage.getItem("apartment-sim-v2");
+  const saved = localStorage.getItem(CURRENT_STATE_KEY);
   if (!saved) return cloneDefault();
   try {
     const parsed = JSON.parse(saved);
@@ -57,7 +96,87 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem("apartment-sim-v2", JSON.stringify(state));
+  localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify(state));
+}
+
+function loadCustomerRecords() {
+  try {
+    const records = JSON.parse(localStorage.getItem(CUSTOMER_STORE_KEY) || "[]");
+    return Array.isArray(records) ? records : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomerRecords(records) {
+  localStorage.setItem(CUSTOMER_STORE_KEY, JSON.stringify(records));
+}
+
+function customerTitle(data = state) {
+  const customer = String(data.customerName || "").trim();
+  const property = String(data.propertyName || "").trim();
+  if (customer && property) return `${customer} / ${property}`;
+  return customer || property || "";
+}
+
+function renderCustomerOptions() {
+  return loadCustomerRecords()
+    .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
+    .map((record) => `<option value="${record.id}" ${record.id === currentCustomerId ? "selected" : ""}>${record.title}</option>`)
+    .join("");
+}
+
+function saveCurrentCustomerRecord() {
+  const title = customerTitle();
+  if (!title) {
+    alert("顧客名または物件名を入力してから保存してください。");
+    return;
+  }
+  const records = loadCustomerRecords();
+  const selected = byId("customerSelect")?.value || currentCustomerId;
+  const existingIndex = records.findIndex((record) => record.id === selected);
+  const now = new Date().toISOString();
+  const record = {
+    id: existingIndex >= 0 ? records[existingIndex].id : `customer-${Date.now()}`,
+    title,
+    updatedAt: now,
+    data: JSON.parse(JSON.stringify(state)),
+  };
+  if (existingIndex >= 0) records[existingIndex] = record;
+  else records.push(record);
+  currentCustomerId = record.id;
+  localStorage.setItem(CURRENT_CUSTOMER_KEY, currentCustomerId);
+  saveCustomerRecords(records);
+  saveState();
+  renderAll();
+  alert("顧客データを保存しました。");
+}
+
+function loadCustomerRecord(id) {
+  const record = loadCustomerRecords().find((item) => item.id === id);
+  if (!record) {
+    alert("顧客データが見つかりません。");
+    return;
+  }
+  state = { ...cloneDefault(), ...record.data };
+  currentCustomerId = record.id;
+  localStorage.setItem(CURRENT_CUSTOMER_KEY, currentCustomerId);
+  saveState();
+  renderAll();
+}
+
+function deleteCustomerRecord(id) {
+  if (!id) return;
+  const records = loadCustomerRecords();
+  const record = records.find((item) => item.id === id);
+  if (!record) return;
+  if (!confirm(`「${record.title}」を削除しますか？`)) return;
+  saveCustomerRecords(records.filter((item) => item.id !== id));
+  if (currentCustomerId === id) {
+    currentCustomerId = "";
+    localStorage.removeItem(CURRENT_CUSTOMER_KEY);
+  }
+  renderAll();
 }
 
 function occupiedRooms() {
@@ -215,6 +334,25 @@ function renderSummary() {
 function renderInputs() {
   byId("inputs").innerHTML = `
     <div class="panel">
+      <h2>顧客データ保存・読込</h2>
+      <div class="customer-tools">
+        <div class="field">
+          <label>保存済み顧客</label>
+          <select id="customerSelect">
+            <option value="">選択してください</option>
+            ${renderCustomerOptions()}
+          </select>
+        </div>
+        <div class="actions-row">
+          <button id="saveCustomerBtn" class="primary" type="button">現在の内容を保存</button>
+          <button id="loadCustomerBtn" type="button">開く</button>
+          <button id="deleteCustomerBtn" type="button">削除</button>
+          <button id="newCustomerBtn" type="button">新規入力</button>
+        </div>
+      </div>
+      <p class="note">顧客名または物件名を入力してから保存してください。保存データはこの端末のブラウザ内に保存されます。</p>
+    </div>
+    <div class="panel">
       <h2>基本情報</h2>
       <div class="grid two">
         ${field("顧客名", "customerName", "text")}
@@ -366,6 +504,7 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.id === "customerSelect") return;
   if (event.target.dataset.key) state[event.target.dataset.key] = event.target.value;
   const rent = event.target.dataset.rent;
   if (rent) {
@@ -377,7 +516,41 @@ document.addEventListener("change", (event) => {
 });
 
 document.addEventListener("focusout", (event) => {
+  if (event.target.id === "customerSelect") return;
   if (event.target.matches("input, select")) {
+    renderAll();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target.id === "saveCustomerBtn") {
+    saveCurrentCustomerRecord();
+  }
+
+  if (event.target.id === "loadCustomerBtn") {
+    const id = byId("customerSelect")?.value;
+    if (!id) {
+      alert("開く顧客データを選択してください。");
+      return;
+    }
+    loadCustomerRecord(id);
+  }
+
+  if (event.target.id === "deleteCustomerBtn") {
+    const id = byId("customerSelect")?.value;
+    if (!id) {
+      alert("削除する顧客データを選択してください。");
+      return;
+    }
+    deleteCustomerRecord(id);
+  }
+
+  if (event.target.id === "newCustomerBtn") {
+    if (!confirm("現在の入力内容をクリアして新規入力を始めますか？")) return;
+    currentCustomerId = "";
+    localStorage.removeItem(CURRENT_CUSTOMER_KEY);
+    state = blankState();
+    saveState();
     renderAll();
   }
 });
@@ -393,15 +566,18 @@ document.querySelectorAll(".tab").forEach((button) => {
 
 byId("saveBtn").addEventListener("click", () => {
   saveState();
-  alert("保存しました");
+  alert("入力内容を保存しました。顧客ごとに残す場合は、入力画面の「現在の内容を保存」を押してください。");
 });
 
 byId("printBtn").addEventListener("click", () => window.print());
 
 byId("resetBtn").addEventListener("click", () => {
-  if (confirm("入力内容を初期値に戻しますか？")) {
-    localStorage.removeItem("apartment-sim-v2");
-    state = cloneDefault();
+  if (confirm("入力内容をすべてクリアしますか？")) {
+    localStorage.removeItem(CURRENT_STATE_KEY);
+    localStorage.removeItem(CURRENT_CUSTOMER_KEY);
+    currentCustomerId = "";
+    state = blankState();
+    saveState();
     renderAll();
   }
 });
