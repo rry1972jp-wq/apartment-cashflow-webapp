@@ -3,12 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#12384d" />
+    <meta name="theme-color" content="#0f3d3e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="収支シミュレーション" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
     <title>アパート収支シミュレーション</title>
     <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -17,7 +19,7 @@
         <p class="eyebrow">Apartment Cashflow</p>
         <h1>アパート収支シミュレーション</h1>
       </div>
-      <button id="resetBtn" class="ghost" type="button" aria-label="初期化">初期化</button>
+      <button id="resetBtn" class="icon-button" type="button" aria-label="初期化">↺</button>
     </header>
 
     <nav class="tabs" aria-label="画面切替">
@@ -25,9 +27,9 @@
       <button class="tab" data-view="inputs" type="button">入力</button>
       <button class="tab" data-view="rentroll" type="button">レントロール</button>
       <button class="tab" data-view="costs" type="button">諸費用</button>
-      <button class="tab" data-view="annual" type="button">年次</button>
-      <button class="tab" data-view="debt" type="button">ローン</button>
-      <button class="tab" data-view="sensitivity" type="button">感度</button>
+      <button class="tab" data-view="annual" type="button">年次収支</button>
+      <button class="tab" data-view="debt" type="button">借入返済</button>
+      <button class="tab" data-view="sensitivity" type="button">感度分析</button>
       <button class="tab" data-view="sale" type="button">売却</button>
     </nav>
 
