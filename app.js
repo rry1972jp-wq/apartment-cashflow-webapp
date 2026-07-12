@@ -363,7 +363,6 @@ document.addEventListener("input", (event) => {
     state.closingCosts[index][fieldIndex] = fieldIndex === 1 ? Number(event.target.value) : event.target.value;
   }
   saveState();
-  renderAll();
 });
 
 document.addEventListener("change", (event) => {
@@ -375,6 +374,12 @@ document.addEventListener("change", (event) => {
   }
   saveState();
   renderAll();
+});
+
+document.addEventListener("focusout", (event) => {
+  if (event.target.matches("input, select")) {
+    renderAll();
+  }
 });
 
 document.querySelectorAll(".tab").forEach((button) => {
