@@ -80,7 +80,7 @@ function blankState() {
       ["", 0],
       ["", 0],
     ],
-    rentRoll: Array.from({ length: 20 }, () => ["", "", 0, "空室"]),
+    rentRoll: [],
   };
 }
 
