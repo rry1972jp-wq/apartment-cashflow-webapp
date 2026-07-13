@@ -22,6 +22,8 @@ const defaultState = {
   loanAmount: 68000000,
   loanRate: 2.2,
   loanYears: 40,
+  rateIncreaseStartYear: 0,
+  rateIncreaseMargin: 0,
   repaymentType: "元利均等",
   vacancyRate: 5,
   rentGrowthRate: 0,
@@ -95,6 +97,8 @@ function blankState() {
     loanAmount: 0,
     loanRate: 0,
     loanYears: 0,
+    rateIncreaseStartYear: 0,
+    rateIncreaseMargin: 0,
     repaymentType: "元利均等",
     vacancyRate: 0,
     rentGrowthRate: 0,
@@ -240,9 +244,17 @@ function loanTermYears() {
   return Math.min(Math.max(Math.floor(Number(state.loanYears || 0)), 0), 40);
 }
 
-function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
-  const principal = Number(state.loanAmount || 0);
-  const years = loanTermYears();
+function rateIncreaseStartYear() {
+  return Math.min(Math.max(Math.floor(Number(state.rateIncreaseStartYear || 0)), 0), loanTermYears());
+}
+
+function loanRateForYear(year) {
+  const startYear = rateIncreaseStartYear();
+  const margin = Number(state.rateIncreaseMargin || 0);
+  return startYear && margin && year >= startYear ? Number(state.loanRate || 0) + margin : Number(state.loanRate || 0);
+}
+
+function annualPaymentByMonthlyPmt(principal, ratePercent, years) {
   const monthlyRate = rate(ratePercent) / 12;
   const months = years * 12;
   if (!principal || !years) return 0;
@@ -251,14 +263,21 @@ function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
   return monthlyPayment * 12;
 }
 
-function annualDebtServiceForYear(beginBalance, ratePercent = state.loanRate) {
+function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
+  const principal = Number(state.loanAmount || 0);
+  return annualPaymentByMonthlyPmt(principal, ratePercent, loanTermYears());
+}
+
+function annualDebtServiceForYear(beginBalance, year) {
   const principal = Number(state.loanAmount || 0);
   const years = loanTermYears();
-  if (!principal || !years) return 0;
+  const currentRate = loanRateForYear(year);
+  const remainingYears = Math.max(years - year + 1, 1);
+  if (!principal || !years || year > years) return 0;
   if (state.repaymentType === "元金均等") {
-    return beginBalance * rate(ratePercent) + Math.min(principal / years, beginBalance);
+    return beginBalance * rate(currentRate) + Math.min(principal / years, beginBalance);
   }
-  return monthlyPmtAnnualDebtService(ratePercent);
+  return annualPaymentByMonthlyPmt(beginBalance, currentRate, remainingYears);
 }
 
 function debtSchedule(maxYears = 40) {
@@ -267,8 +286,9 @@ function debtSchedule(maxYears = 40) {
   const rows = [];
   for (let year = 1; year <= maxYears; year += 1) {
     const begin = balance;
-    const interest = begin * rate(state.loanRate);
-    const debtService = year <= years ? annualDebtServiceForYear(begin) : 0;
+    const currentRate = loanRateForYear(year);
+    const interest = begin * rate(currentRate);
+    const debtService = year <= years ? annualDebtServiceForYear(begin, year) : 0;
     let principalPaid = year <= years ? debtService - interest : 0;
     if (state.repaymentType === "元金均等") {
       principalPaid = year <= years ? Math.min(Number(state.loanAmount || 0) / years, begin) : 0;
@@ -279,6 +299,7 @@ function debtSchedule(maxYears = 40) {
       year,
       begin,
       debtService: year <= years ? interest + principalPaid : 0,
+      rate: currentRate,
       interest,
       principal: principalPaid,
       end: balance,
@@ -451,6 +472,9 @@ function renderInputs() {
         ${field("自己資金", "ownCapital")}
         ${field("借入金額", "loanAmount")}
         ${field("借入金利（％）", "loanRate", "number", "0.01")}
+        ${field("金利上昇開始年（0で上昇なし）", "rateIncreaseStartYear", "number", "1")}
+        ${field("金利上昇幅（％）", "rateIncreaseMargin", "number", "0.01")}
+        <div class="field"><label>上昇後金利</label><input type="text" value="${(Number(state.loanRate || 0) + Number(state.rateIncreaseMargin || 0)).toFixed(2)}%" readonly></div>
         ${field("返済期間（年・最長40年）", "loanYears", "number", "1")}
         <div class="field"><label>返済方式</label><select data-key="repaymentType"><option ${state.repaymentType === "元利均等" ? "selected" : ""}>元利均等</option><option ${state.repaymentType === "元金均等" ? "selected" : ""}>元金均等</option></select></div>
         ${field("空室率（％）", "vacancyRate", "number", "0.1")}
@@ -464,7 +488,7 @@ function renderInputs() {
     </div>
     <div class="panel">
       <h2>入力時の注意事項</h2>
-      <p class="note">率は「5」のように整数で入力してください。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。</p>
+      <p class="note">率は「5」のように整数で入力してください。金利上昇開始年を0にすると金利上昇なしで計算します。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。</p>
     </div>`;
 }
 
@@ -511,8 +535,8 @@ function renderAnnual() {
 
 function renderDebt() {
   const displayYears = loanTermYears();
-  const rows = debtSchedule(displayYears).map((row) => `<tr><td>${row.year}年目</td>${moneyCell(row.begin)}${moneyCell(row.debtService)}${moneyCell(row.interest)}${moneyCell(row.principal)}${moneyCell(row.end)}<td>${pct(row.ltv)}</td></tr>`);
-  byId("debt").innerHTML = `<div class="panel"><h2>借入返済（${displayYears}年）</h2>${table(["年", "期首残高", "年間返済額", "利息", "元金返済", "期末残高", "借入比率"], rows)}</div>`;
+  const rows = debtSchedule(displayYears).map((row) => `<tr><td>${row.year}年目</td><td>${Number(row.rate || 0).toFixed(2)}%</td>${moneyCell(row.begin)}${moneyCell(row.debtService)}${moneyCell(row.interest)}${moneyCell(row.principal)}${moneyCell(row.end)}<td>${pct(row.ltv)}</td></tr>`);
+  byId("debt").innerHTML = `<div class="panel"><h2>借入返済（${displayYears}年）</h2>${table(["年", "適用金利", "期首残高", "年間返済額", "利息", "元金返済", "期末残高", "借入比率"], rows)}</div>`;
 }
 
 function renderSensitivity() {
@@ -569,10 +593,11 @@ function renderAll() {
 
 document.addEventListener("input", (event) => {
   const key = event.target.dataset.key;
-  if (key) {
-    state[key] = event.target.type === "number" ? Number(event.target.value) : event.target.value;
-    if (key === "loanYears") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), 40);
-  }
+    if (key) {
+      state[key] = event.target.type === "number" ? Number(event.target.value) : event.target.value;
+      if (key === "loanYears") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), 40);
+      if (key === "rateIncreaseStartYear") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), loanTermYears());
+    }
   const rent = event.target.dataset.rent;
   if (rent) {
     const [index, fieldIndex] = rent.split(",").map(Number);
