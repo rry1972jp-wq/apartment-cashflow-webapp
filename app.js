@@ -236,9 +236,13 @@ function assumptions() {
   };
 }
 
+function loanTermYears() {
+  return Math.min(Math.max(Math.floor(Number(state.loanYears || 0)), 0), 40);
+}
+
 function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
   const principal = Number(state.loanAmount || 0);
-  const years = Number(state.loanYears || 0);
+  const years = loanTermYears();
   const monthlyRate = rate(ratePercent) / 12;
   const months = years * 12;
   if (!principal || !years) return 0;
@@ -249,7 +253,7 @@ function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
 
 function annualDebtServiceForYear(beginBalance, ratePercent = state.loanRate) {
   const principal = Number(state.loanAmount || 0);
-  const years = Number(state.loanYears || 0);
+  const years = loanTermYears();
   if (!principal || !years) return 0;
   if (state.repaymentType === "元金均等") {
     return beginBalance * rate(ratePercent) + Math.min(principal / years, beginBalance);
@@ -259,7 +263,7 @@ function annualDebtServiceForYear(beginBalance, ratePercent = state.loanRate) {
 
 function debtSchedule(maxYears = 40) {
   let balance = Number(state.loanAmount || 0);
-  const years = Number(state.loanYears || 0);
+  const years = loanTermYears();
   const rows = [];
   for (let year = 1; year <= maxYears; year += 1) {
     const begin = balance;
@@ -506,8 +510,9 @@ function renderAnnual() {
 }
 
 function renderDebt() {
-  const rows = debtSchedule(40).map((row) => `<tr><td>${row.year}年目</td>${moneyCell(row.begin)}${moneyCell(row.debtService)}${moneyCell(row.interest)}${moneyCell(row.principal)}${moneyCell(row.end)}<td>${pct(row.ltv)}</td></tr>`);
-  byId("debt").innerHTML = `<div class="panel"><h2>借入返済（40年）</h2>${table(["年", "期首残高", "年間返済額", "利息", "元金返済", "期末残高", "借入比率"], rows)}</div>`;
+  const displayYears = loanTermYears();
+  const rows = debtSchedule(displayYears).map((row) => `<tr><td>${row.year}年目</td>${moneyCell(row.begin)}${moneyCell(row.debtService)}${moneyCell(row.interest)}${moneyCell(row.principal)}${moneyCell(row.end)}<td>${pct(row.ltv)}</td></tr>`);
+  byId("debt").innerHTML = `<div class="panel"><h2>借入返済（${displayYears}年）</h2>${table(["年", "期首残高", "年間返済額", "利息", "元金返済", "期末残高", "借入比率"], rows)}</div>`;
 }
 
 function renderSensitivity() {
