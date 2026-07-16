@@ -597,28 +597,21 @@ td:first-child, th:first-child { text-align: left; }
 }
 
 @media print {
-  @page { size: A4 landscape; margin: 6mm; }
-  html, body { width: 285mm; min-height: 198mm; }
-  body { padding-bottom: 0; background: #fff; }
+  @page { size: A4 landscape; margin: 8mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { padding-bottom: 0; background: var(--bg); }
   .app-header, .tabs, .bottom-actions, .icon-button { display: none; }
-  main { width: 100%; max-width: none; padding: 0; }
+  main { max-width: none; padding: 0; }
   .view { display: none; }
-  .view.active { display: block; break-after: auto; }
-  #proposal.view.active {
-    width: 285mm;
-    height: 198mm;
-    overflow: hidden;
-  }
+  .view.active { display: block; }
   #proposal.view.active .proposal-sheet {
-    width: 1160px;
-    min-height: 0;
-    margin: 0;
+    width: min(100%, 1160px);
+    margin: 0 auto;
     padding: 24px;
-    box-shadow: none;
+    box-shadow: 0 16px 38px rgba(31, 40, 36, .16);
     break-after: auto;
-    transform: scale(.88);
-    transform-origin: top left;
   }
-  input, select { color: #000; background: #fff; }
+  input, select { color: inherit; background: #fff; }
 }
+
 
