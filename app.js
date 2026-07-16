@@ -1,5 +1,6 @@
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
 const number = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 1 });
+const integer = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 });
 const byId = (id) => document.getElementById(id);
 const rate = (v) => Number(v || 0) / 100;
 const CURRENT_STATE_KEY = "apartment-sim-v2";
@@ -395,6 +396,10 @@ function pct(value) {
   return `${(Number(value || 0) * 100).toFixed(1)}%`;
 }
 
+function pct2(value) {
+  return `${(Number(value || 0) * 100).toFixed(2)}%`;
+}
+
 function pctOrDash(value) {
   return value === null || !Number.isFinite(value) ? "-" : pct(value);
 }
@@ -406,6 +411,18 @@ function table(headers, rows, cls = "") {
 function field(label, key, type = "number", step = "1") {
   const inputMode = type === "number" ? ' inputmode="decimal"' : "";
   return `<div class="field"><label>${label}</label><input data-key="${key}" type="${type}" step="${step}"${inputMode} value="${state[key] ?? ""}"></div>`;
+}
+
+function parseNumberInput(value) {
+  return Number(String(value ?? "").replace(/,/g, "")) || 0;
+}
+
+function formatAmountInput(value) {
+  return integer.format(Number(value || 0));
+}
+
+function moneyField(label, key) {
+  return `<div class="field"><label>${label}</label><input data-key="${key}" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(state[key])}"></div>`;
 }
 
 function metric(label, value, warn = false) {
@@ -442,7 +459,7 @@ function renderSummary() {
         ${metric("諸費用合計", yen.format(a.closing))}
         ${metric("総投資額", yen.format(a.totalInvestment))}
         ${metric("年間満室賃料", yen.format(a.annualGross))}
-        ${metric("表面利回り", pct(surfaceYield))}
+        ${metric("表面利回り", pct2(surfaceYield))}
         ${metric("CCR", pct(ccr))}
         ${metric("初年度 税引前CF", yen.format(cf1.preTaxCf), cf1.preTaxCf < 0)}
         ${metric("DSCR", `${cf1.dscr.toFixed(2)}倍`, cf1.dscr < 1)}
@@ -569,7 +586,7 @@ function renderProposal() {
           </div>
 
           <div class="proposal-kpi-grid">
-            ${proposalBox("表面利回り", pct(surfaceYield))}
+            ${proposalBox("表面利回り", pct2(surfaceYield))}
             ${proposalBox("CCR", pct(ccr))}
             ${proposalBox("DSCR", `${cf1.dscr.toFixed(2)}倍`)}
           </div>
@@ -623,9 +640,9 @@ function renderInputs() {
       <h2>借入・税金・出口条件</h2>
       <div class="grid two">
         ${field("金融機関", "bankName", "text")}
-        ${field("物件価格", "purchasePrice")}
-        ${field("自己資金", "ownCapital")}
-        ${field("借入金額", "loanAmount")}
+        ${moneyField("物件価格", "purchasePrice")}
+        ${moneyField("自己資金", "ownCapital")}
+        ${moneyField("借入金額", "loanAmount")}
         ${field("借入金利（％）", "loanRate", "number", "0.01")}
         ${field("金利上昇開始年（0で上昇なし）", "rateIncreaseStartYear", "number", "1")}
         ${field("金利上昇幅（％）", "rateIncreaseMargin", "number", "0.01")}
@@ -634,8 +651,8 @@ function renderInputs() {
         <div class="field"><label>返済方式</label><select data-key="repaymentType"><option ${state.repaymentType === "元利均等" ? "selected" : ""}>元利均等</option><option ${state.repaymentType === "元金均等" ? "selected" : ""}>元金均等</option></select></div>
         ${field("空室率（％）", "vacancyRate", "number", "0.1")}
         ${field("家賃上昇率（％）", "rentGrowthRate", "number", "0.1")}
-        ${field("固定資産税等（円）", "fixedAssetTax")}
-        ${field("運営経費（年額・円）", "operatingCost")}
+        ${moneyField("固定資産税等（円）", "fixedAssetTax")}
+        ${moneyField("運営経費（年額・円）", "operatingCost")}
         ${field("管理委託料率（％）", "propertyManagementRate", "number", "0.1")}
         ${field("売却価格成長率（％）", "salePriceGrowthRate")}
         ${field("売却費用率（％）", "sellingCostRate")}
@@ -654,7 +671,7 @@ function renderRentroll() {
     <tr>
       <td><input data-rent="${index},0" type="text" value="${room[0]}"></td>
       <td><input data-rent="${index},1" type="text" value="${room[1]}"></td>
-      <td><input data-rent="${index},2" type="number" inputmode="numeric" value="${room[2]}"></td>
+      <td><input data-rent="${index},2" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(room[2])}"></td>
       <td><select data-rent="${index},3"><option ${room[3] === "入居中" ? "selected" : ""}>入居中</option><option ${room[3] === "空室" ? "selected" : ""}>空室</option></select></td>
     </tr>`);
   byId("rentroll").innerHTML = `
@@ -671,7 +688,7 @@ function renderRentroll() {
 
 function renderCosts() {
   state.closingCosts = normalizeClosingCosts(state.closingCosts);
-  const rows = state.closingCosts.map((row, index) => `<tr><td><input data-cost="${index},0" type="text" value="${row[0]}"></td><td><input data-cost="${index},1" type="number" inputmode="numeric" value="${row[1]}"></td></tr>`);
+  const rows = state.closingCosts.map((row, index) => `<tr><td><input data-cost="${index},0" type="text" value="${row[0]}"></td><td><input data-cost="${index},1" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(row[1])}"></td></tr>`);
   byId("costs").innerHTML = `
     <div class="panel">
       <h2>諸費用入力</h2>
@@ -750,30 +767,30 @@ function renderAll() {
 document.addEventListener("input", (event) => {
   const key = event.target.dataset.key;
     if (key) {
-      state[key] = event.target.type === "number" ? Number(event.target.value) : event.target.value;
+      state[key] = event.target.dataset.format === "money" ? parseNumberInput(event.target.value) : event.target.type === "number" ? Number(event.target.value) : event.target.value;
       if (key === "loanYears") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), 40);
       if (key === "rateIncreaseStartYear") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), loanTermYears());
     }
   const rent = event.target.dataset.rent;
   if (rent) {
     const [index, fieldIndex] = rent.split(",").map(Number);
-    state.rentRoll[index][fieldIndex] = fieldIndex === 2 ? Number(event.target.value) : event.target.value;
+    state.rentRoll[index][fieldIndex] = fieldIndex === 2 ? parseNumberInput(event.target.value) : event.target.value;
   }
   const cost = event.target.dataset.cost;
   if (cost) {
     const [index, fieldIndex] = cost.split(",").map(Number);
-    state.closingCosts[index][fieldIndex] = fieldIndex === 1 ? Number(event.target.value) : event.target.value;
+    state.closingCosts[index][fieldIndex] = fieldIndex === 1 ? parseNumberInput(event.target.value) : event.target.value;
   }
   saveState();
 });
 
 document.addEventListener("change", (event) => {
   if (event.target.id === "customerSelect") return;
-  if (event.target.dataset.key) state[event.target.dataset.key] = event.target.value;
+  if (event.target.dataset.key) state[event.target.dataset.key] = event.target.dataset.format === "money" ? parseNumberInput(event.target.value) : event.target.value;
   const rent = event.target.dataset.rent;
   if (rent) {
     const [index, fieldIndex] = rent.split(",").map(Number);
-    state.rentRoll[index][fieldIndex] = event.target.value;
+    state.rentRoll[index][fieldIndex] = fieldIndex === 2 ? parseNumberInput(event.target.value) : event.target.value;
   }
   saveState();
   renderAll();
