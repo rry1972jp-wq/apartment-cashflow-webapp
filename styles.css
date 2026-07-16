@@ -599,11 +599,11 @@ td:first-child, th:first-child { text-align: left; }
 @media print {
   @page { size: A4 landscape; margin: 8mm; }
   body { padding-bottom: 0; background: #fff; }
-  .tabs, .bottom-actions, .icon-button { display: none; }
-  .app-header { position: static; min-height: 0; padding: 0 0 12px; color: #000; background: #fff; }
-  .eyebrow { color: #555; }
-  .view { display: block; break-after: page; }
+  .app-header, .tabs, .bottom-actions, .icon-button { display: none; }
+  main { width: 100%; max-width: none; padding: 0; }
+  .view { display: none; }
+  .view.active { display: block; break-after: auto; }
   .panel { border-color: #999; }
-  .proposal-sheet { width: 100%; min-height: 185mm; padding: 8mm; box-shadow: none; break-after: page; }
+  .proposal-sheet { width: 100%; min-height: 185mm; padding: 8mm; box-shadow: none; break-after: auto; }
   input, select { color: #000; background: #fff; }
 }
