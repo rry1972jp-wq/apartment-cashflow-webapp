@@ -489,106 +489,92 @@ function renderProposal() {
   const monthlyCf = cf1.preTaxCf / 12;
   const roomCount = `${a.rooms}戸`;
   const today = new Date().toLocaleDateString("ja-JP");
+  const totalExpense = cf1.operatingExpense + debt1.debtService;
 
   byId("proposal").innerHTML = `
     <div class="proposal-sheet">
-      <div class="proposal-title-bar">
+      <header class="proposal-header">
         <div>
-          <p>概要　${state.bankName || "金融機関未入力"}</p>
+          <p class="proposal-eyebrow">Investment Proposal</p>
           <h2>${state.propertyName || "物件名未入力"}</h2>
+          <p class="proposal-subtitle">${state.location || "所在地未入力"}　${state.access || ""}</p>
         </div>
-        <div class="proposal-date">${today}</div>
-      </div>
+        <div class="proposal-meta">
+          <span>${today}</span>
+          <strong>${state.customerName || "お客様"} 御中</strong>
+          <em>${state.bankName || "金融機関未入力"}</em>
+        </div>
+      </header>
+
+      <section class="proposal-hero">
+        <div class="proposal-hero-main">
+          <span>年間税引前CF</span>
+          <strong>${yen.format(cf1.preTaxCf)}</strong>
+          <small>月間CF ${yen.format(monthlyCf)}</small>
+        </div>
+        <div class="proposal-kpi">
+          ${proposalBox("表面利回り", pct2(surfaceYield))}
+          ${proposalBox("CCR", pct(ccr))}
+          ${proposalBox("DSCR", `${cf1.dscr.toFixed(2)}倍`)}
+        </div>
+      </section>
 
       <div class="proposal-main">
-        <section class="proposal-left">
-          <div class="proposal-price-grid">
-            ${proposalBox("物件価格", manYen(state.purchasePrice), "万円(税込)")}
-            ${proposalBox("諸経費", manYen(a.closing), "万円")}
+        <section class="proposal-panel">
+          <h3>資金計画</h3>
+          <div class="proposal-money-grid">
+            ${proposalBox("物件価格", manYen(state.purchasePrice), "万円")}
+            ${proposalBox("諸費用", manYen(a.closing), "万円")}
+            ${proposalBox("総投資額", manYen(a.totalInvestment), "万円")}
+            ${proposalBox("自己資金", manYen(state.ownCapital), "万円")}
+            ${proposalBox("借入金額", manYen(state.loanAmount), "万円")}
+            ${proposalBox("返済期間", `${loanTermYears()}年`)}
           </div>
 
-          <div class="proposal-section">
-            <h3>資金計画</h3>
-            <div class="proposal-money-grid">
-              ${proposalBox("総事業費", manYen(a.totalInvestment), "万円")}
-              ${proposalBox("自己資金", manYen(state.ownCapital), "万円")}
-              ${proposalBox("融資金額", manYen(state.loanAmount), "万円")}
-            </div>
-          </div>
-
-          <div class="proposal-section">
-            <h3>物件概要</h3>
-            <div class="proposal-two-col">
-              <div>
-                ${proposalRow("所在地", state.location || "-")}
-                ${proposalRow("交通", state.access || "-")}
-                ${proposalRow("構造", state.structure || "-")}
-                ${proposalRow("築年数", `${Number(state.builtYear || 0)}年`)}
-                ${proposalRow("部屋数", roomCount)}
-              </div>
-              <div>
-                ${proposalRow("土地面積", `${number.format(Number(state.landAreaSqm || 0))}㎡`)}
-                ${proposalRow("建物面積", `${number.format(Number(state.buildingAreaSqm || 0))}㎡`)}
-                ${proposalRow("建蔽率", `${Number(state.buildingCoverage || 0)}%`)}
-                ${proposalRow("容積率", `${Number(state.floorAreaRatio || 0)}%`)}
-              </div>
-            </div>
-          </div>
-
-          <div class="proposal-section compact-section">
-            <h3>設備・仕様</h3>
-            <div class="proposal-tags">
-              <span>電気</span><span>ガス</span><span>上水道</span><span>下水道</span><span>公共</span>
-            </div>
+          <h3>物件概要</h3>
+          <div class="proposal-detail-grid">
+            ${proposalRow("所在地", state.location || "-")}
+            ${proposalRow("交通", state.access || "-")}
+            ${proposalRow("構造", state.structure || "-")}
+            ${proposalRow("築年数", `${Number(state.builtYear || 0)}年`)}
+            ${proposalRow("部屋数", roomCount)}
+            ${proposalRow("土地面積", `${number.format(Number(state.landAreaSqm || 0))}㎡`)}
+            ${proposalRow("建物面積", `${number.format(Number(state.buildingAreaSqm || 0))}㎡`)}
+            ${proposalRow("建蔽率 / 容積率", `${Number(state.buildingCoverage || 0)}% / ${Number(state.floorAreaRatio || 0)}%`)}
           </div>
         </section>
 
-        <section class="proposal-right">
-          <div class="proposal-section">
-            <h3>収支計画</h3>
-            <div class="proposal-calc-line">
-              <div>
-                <strong>収入合計</strong>
-                <span>${yen.format(a.annualGross)}</span>
-              </div>
-              <div class="proposal-arrow"></div>
-              <div class="proposal-result">
-                <strong>月間CF</strong>
-                <span>${yen.format(monthlyCf)}</span>
-              </div>
+        <section class="proposal-panel">
+          <h3>収支計画</h3>
+          <div class="proposal-flow">
+            <div>
+              <span>収入合計</span>
+              <strong>${yen.format(a.annualGross)}</strong>
             </div>
-            <div class="proposal-calc-line">
-              <div>
-                <strong>支出合計</strong>
-                <span>${yen.format(cf1.operatingExpense + debt1.debtService)}</span>
-              </div>
-              <div class="proposal-arrow"></div>
-              <div class="proposal-result">
-                <strong>年間CF</strong>
-                <span>${yen.format(cf1.preTaxCf)}</span>
-              </div>
+            <div>
+              <span>支出合計</span>
+              <strong>${yen.format(totalExpense)}</strong>
+            </div>
+            <div class="is-emphasis">
+              <span>年間CF</span>
+              <strong>${yen.format(cf1.preTaxCf)}</strong>
             </div>
           </div>
 
-          <div class="proposal-section">
-            <h3>収入内訳</h3>
-            ${proposalRow("満室想定賃料", yen.format(a.annualGross))}
-            ${proposalRow("空室損", yen.format(cf1.vacancy))}
-            ${proposalRow("実効総収入", yen.format(cf1.effective))}
-          </div>
-
-          <div class="proposal-section">
-            <h3>支出内訳</h3>
-            ${proposalRow("年間返済額", yen.format(debt1.debtService))}
-            ${proposalRow("固定資産税等", yen.format(Number(state.fixedAssetTax || 0)))}
-            ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
-            ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
-          </div>
-
-          <div class="proposal-kpi-grid">
-            ${proposalBox("表面利回り", pct2(surfaceYield))}
-            ${proposalBox("CCR", pct(ccr))}
-            ${proposalBox("DSCR", `${cf1.dscr.toFixed(2)}倍`)}
+          <div class="proposal-split">
+            <div>
+              <h4>収入内訳</h4>
+              ${proposalRow("満室想定賃料", yen.format(a.annualGross))}
+              ${proposalRow("空室損", yen.format(cf1.vacancy))}
+              ${proposalRow("実効総収入", yen.format(cf1.effective))}
+            </div>
+            <div>
+              <h4>支出内訳</h4>
+              ${proposalRow("年間返済額", yen.format(debt1.debtService))}
+              ${proposalRow("固定資産税等", yen.format(Number(state.fixedAssetTax || 0)))}
+              ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
+              ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
+            </div>
           </div>
         </section>
       </div>
