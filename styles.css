@@ -240,6 +240,240 @@ td:first-child, th:first-child { text-align: left; }
 
 .totals { margin-top: 12px; }
 
+.proposal-sheet {
+  width: min(100%, 1120px);
+  margin: 0 auto 18px;
+  padding: 24px;
+  color: #111;
+  background: #fff;
+  border: 1px solid #111;
+  box-shadow: 0 8px 24px rgba(12, 24, 20, .12);
+}
+
+.proposal-title-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  gap: 18px;
+  margin-bottom: 18px;
+  border-bottom: 4px double #111;
+}
+
+.proposal-title-bar > div:first-child {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 78px;
+}
+
+.proposal-title-bar p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 8px;
+  color: #fff;
+  background: #1687c4;
+  font-weight: 800;
+  writing-mode: horizontal-tb;
+}
+
+.proposal-title-bar h2 {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 10px 16px;
+  color: #1687c4;
+  border: 1px solid #111;
+  border-left: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.proposal-date {
+  align-self: center;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+}
+
+.proposal-section {
+  margin-top: 14px;
+}
+
+.proposal-section h3 {
+  margin: 0 0 8px;
+  padding: 5px 8px;
+  color: #111;
+  background: #fff;
+  border-left: 8px solid #111;
+  border-bottom: 2px solid #111;
+  font-size: 16px;
+}
+
+.proposal-price-grid,
+.proposal-money-grid,
+.proposal-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.proposal-money-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.proposal-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.proposal-box {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  min-height: 58px;
+  border: 2px solid #111;
+  background: #fff;
+}
+
+.proposal-box-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: #fff;
+  background: #111;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.proposal-box-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  color: #111;
+  font-size: 21px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.proposal-box-value span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.proposal-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.proposal-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  min-height: 32px;
+  border-bottom: 1px solid #222;
+  font-size: 13px;
+}
+
+.proposal-row span {
+  padding: 7px 8px;
+  font-weight: 800;
+}
+
+.proposal-row strong {
+  padding: 7px 8px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.proposal-tags {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.proposal-tags span {
+  padding: 7px;
+  border: 1px solid #111;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.proposal-calc-line {
+  display: grid;
+  grid-template-columns: 1fr 42px 160px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.proposal-calc-line > div:first-child,
+.proposal-result {
+  min-height: 62px;
+  padding: 9px 10px;
+  border: 2px solid #111;
+  background: #fff;
+}
+
+.proposal-calc-line strong,
+.proposal-calc-line span {
+  display: block;
+  text-align: right;
+}
+
+.proposal-calc-line strong {
+  font-size: 13px;
+}
+
+.proposal-calc-line span {
+  margin-top: 5px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.proposal-result {
+  background: linear-gradient(90deg, #e6f6fd, #fff);
+}
+
+.proposal-arrow {
+  width: 0;
+  height: 0;
+  border-top: 22px solid transparent;
+  border-bottom: 22px solid transparent;
+  border-left: 34px solid #33aee2;
+}
+
+.proposal-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: end;
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 2px solid #111;
+}
+
+.proposal-footer p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.proposal-footer strong {
+  font-family: Georgia, serif;
+  font-size: 18px;
+}
+
 .bottom-actions {
   position: fixed;
   left: 0;
@@ -258,6 +492,18 @@ td:first-child, th:first-child { text-align: left; }
 @media (max-width: 720px) {
   .actions-row { grid-template-columns: 1fr 1fr; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
+  .proposal-sheet { padding: 12px; overflow-x: auto; }
+  .proposal-title-bar,
+  .proposal-main,
+  .proposal-two-col,
+  .proposal-footer { grid-template-columns: 1fr; }
+  .proposal-title-bar > div:first-child { grid-template-columns: 1fr; }
+  .proposal-title-bar h2 { border-left: 1px solid #111; font-size: 22px; }
+  .proposal-price-grid,
+  .proposal-money-grid,
+  .proposal-kpi-grid { grid-template-columns: 1fr; }
+  .proposal-calc-line { grid-template-columns: 1fr; }
+  .proposal-arrow { display: none; }
   main { padding: 10px; }
   .panel { padding: 12px; }
   h1 { font-size: 17px; }
@@ -265,11 +511,13 @@ td:first-child, th:first-child { text-align: left; }
 }
 
 @media print {
+  @page { size: A4 landscape; margin: 8mm; }
   body { padding-bottom: 0; background: #fff; }
   .tabs, .bottom-actions, .icon-button { display: none; }
   .app-header { position: static; min-height: 0; padding: 0 0 12px; color: #000; background: #fff; }
   .eyebrow { color: #555; }
   .view { display: block; break-after: page; }
   .panel { border-color: #999; }
+  .proposal-sheet { width: 100%; min-height: 185mm; padding: 8mm; box-shadow: none; break-after: page; }
   input, select { color: #000; background: #fff; }
 }

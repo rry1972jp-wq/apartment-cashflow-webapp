@@ -406,6 +406,14 @@ function metric(label, value, warn = false) {
   return `<div class="metric ${warn ? "warn" : ""}"><div class="label">${label}</div><div class="value">${value}</div></div>`;
 }
 
+function proposalBox(label, value, unit = "") {
+  return `<div class="proposal-box"><div class="proposal-box-label">${label}</div><div class="proposal-box-value">${value}<span>${unit}</span></div></div>`;
+}
+
+function proposalRow(label, value) {
+  return `<div class="proposal-row"><span>${label}</span><strong>${value}</strong></div>`;
+}
+
 function renderSummary() {
   const a = assumptions();
   const cf1 = annualCashflow(1)[0];
@@ -435,6 +443,126 @@ function renderSummary() {
         ${metric("建蔽率", `${state.buildingCoverage}%`)}
         ${metric("容積率", `${state.floorAreaRatio}%`)}
         ${metric("築年数", `${state.builtYear}年`)}
+      </div>
+    </div>`;
+}
+
+function renderProposal() {
+  const a = assumptions();
+  const cf1 = annualCashflow(1)[0];
+  const debt1 = debtSchedule(1)[0] || { debtService: 0 };
+  const surfaceYield = Number(state.purchasePrice || 0) ? a.annualGross / Number(state.purchasePrice) : 0;
+  const equity = equityInvestment();
+  const ccr = equity ? cf1.preTaxCf / equity : 0;
+  const monthlyCf = cf1.preTaxCf / 12;
+  const roomCount = `${a.rooms}戸`;
+  const today = new Date().toLocaleDateString("ja-JP");
+
+  byId("proposal").innerHTML = `
+    <div class="proposal-sheet">
+      <div class="proposal-title-bar">
+        <div>
+          <p>概要　${state.bankName || "金融機関未入力"}</p>
+          <h2>${state.propertyName || "物件名未入力"}</h2>
+        </div>
+        <div class="proposal-date">${today}</div>
+      </div>
+
+      <div class="proposal-main">
+        <section class="proposal-left">
+          <div class="proposal-price-grid">
+            ${proposalBox("物件価格", yen.format(Number(state.purchasePrice || 0)), "税込")}
+            ${proposalBox("諸経費", yen.format(a.closing))}
+          </div>
+
+          <div class="proposal-section">
+            <h3>資金計画</h3>
+            <div class="proposal-money-grid">
+              ${proposalBox("総事業費", yen.format(a.totalInvestment))}
+              ${proposalBox("自己資金", yen.format(Number(state.ownCapital || 0)))}
+              ${proposalBox("融資金額", yen.format(Number(state.loanAmount || 0)))}
+            </div>
+          </div>
+
+          <div class="proposal-section">
+            <h3>物件概要</h3>
+            <div class="proposal-two-col">
+              <div>
+                ${proposalRow("所在地", state.location || "-")}
+                ${proposalRow("構造", state.structure || "-")}
+                ${proposalRow("築年数", `${Number(state.builtYear || 0)}年`)}
+                ${proposalRow("部屋数", roomCount)}
+              </div>
+              <div>
+                ${proposalRow("土地面積", `${number.format(Number(state.landAreaSqm || 0))}㎡`)}
+                ${proposalRow("建物面積", `${number.format(Number(state.buildingAreaSqm || 0))}㎡`)}
+                ${proposalRow("建蔽率", `${Number(state.buildingCoverage || 0)}%`)}
+                ${proposalRow("容積率", `${Number(state.floorAreaRatio || 0)}%`)}
+              </div>
+            </div>
+          </div>
+
+          <div class="proposal-section compact-section">
+            <h3>設備・仕様</h3>
+            <div class="proposal-tags">
+              <span>電気</span><span>ガス</span><span>上水道</span><span>下水道</span><span>公共</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="proposal-right">
+          <div class="proposal-section">
+            <h3>収支計画</h3>
+            <div class="proposal-calc-line">
+              <div>
+                <strong>収入合計</strong>
+                <span>${yen.format(a.annualGross)}</span>
+              </div>
+              <div class="proposal-arrow"></div>
+              <div class="proposal-result">
+                <strong>月間CF</strong>
+                <span>${yen.format(monthlyCf)}</span>
+              </div>
+            </div>
+            <div class="proposal-calc-line">
+              <div>
+                <strong>支出合計</strong>
+                <span>${yen.format(cf1.operatingExpense + debt1.debtService)}</span>
+              </div>
+              <div class="proposal-arrow"></div>
+              <div class="proposal-result">
+                <strong>年間CF</strong>
+                <span>${yen.format(cf1.preTaxCf)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="proposal-section">
+            <h3>収入内訳</h3>
+            ${proposalRow("満室想定賃料", yen.format(a.annualGross))}
+            ${proposalRow("空室損", yen.format(cf1.vacancy))}
+            ${proposalRow("実効総収入", yen.format(cf1.effective))}
+          </div>
+
+          <div class="proposal-section">
+            <h3>支出内訳</h3>
+            ${proposalRow("年間返済額", yen.format(debt1.debtService))}
+            ${proposalRow("固定資産税等", yen.format(Number(state.fixedAssetTax || 0)))}
+            ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
+            ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
+          </div>
+
+          <div class="proposal-kpi-grid">
+            ${proposalBox("表面利回り", pct(surfaceYield))}
+            ${proposalBox("CCR", pct(ccr))}
+            ${proposalBox("DSCR", `${cf1.dscr.toFixed(2)}倍`)}
+          </div>
+        </section>
+      </div>
+
+      <div class="proposal-footer">
+        <p>本シミュレーションは満室時想定に基づく試算です。市場動向、空室、賃料変動、金利変動、修繕費等により実際の収支は変動します。</p>
+        <strong>Agre urban design Inc.</strong>
       </div>
     </div>`;
 }
@@ -592,6 +720,7 @@ function renderSale() {
 
 function renderAll() {
   renderSummary();
+  renderProposal();
   renderInputs();
   renderRentroll();
   renderCosts();
