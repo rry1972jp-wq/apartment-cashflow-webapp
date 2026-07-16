@@ -1,37 +1,37 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0f3d3e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="蜿取髪繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ" />
+    <meta name="apple-mobile-web-app-title" content="収支シミュレーション" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
-    <title>繧｢繝代・繝亥庶謾ｯ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ</title>
-    <link rel="manifest" href="./manifest.json?v=20260716-10" />
+    <title>アパート収支シミュレーション</title>
+    <link rel="manifest" href="./manifest.json?v=20260716-11" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260716-10" />
+    <link rel="stylesheet" href="./styles.css?v=20260716-11" />
   </head>
   <body>
     <header class="app-header">
       <div>
         <p class="eyebrow">Apartment Cashflow</p>
-        <h1>繧｢繝代・繝亥庶謾ｯ繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ</h1>
+        <h1>アパート収支シミュレーション</h1>
       </div>
-      <button id="resetBtn" class="icon-button" type="button" aria-label="蛻晄悄蛹・>竊ｺ</button>
+      <button id="resetBtn" class="icon-button" type="button" aria-label="初期化">↺</button>
     </header>
 
-    <nav class="tabs" aria-label="逕ｻ髱｢蛻・崛">
-      <button class="tab active" data-view="summary" type="button">陦ｨ邏・/button>
-      <button class="tab" data-view="proposal" type="button">鬘ｧ螳｢謠千､ｺ</button>
-      <button class="tab" data-view="inputs" type="button">蜈･蜉・/button>
-      <button class="tab" data-view="rentroll" type="button">繝ｬ繝ｳ繝医Ο繝ｼ繝ｫ</button>
-      <button class="tab" data-view="costs" type="button">隲ｸ雋ｻ逕ｨ</button>
-      <button class="tab" data-view="annual" type="button">蟷ｴ谺｡蜿取髪</button>
-      <button class="tab" data-view="debt" type="button">蛟溷・霑疲ｸ・/button>
-      <button class="tab" data-view="sensitivity" type="button">諢溷ｺｦ蛻・梵</button>
-      <button class="tab" data-view="sale" type="button">螢ｲ蜊ｴ</button>
+    <nav class="tabs" aria-label="画面切替">
+      <button class="tab active" data-view="summary" type="button">表紙</button>
+      <button class="tab" data-view="proposal" type="button">顧客提示</button>
+      <button class="tab" data-view="inputs" type="button">入力</button>
+      <button class="tab" data-view="rentroll" type="button">レントロール</button>
+      <button class="tab" data-view="costs" type="button">諸費用</button>
+      <button class="tab" data-view="annual" type="button">年次収支</button>
+      <button class="tab" data-view="debt" type="button">借入返済</button>
+      <button class="tab" data-view="sensitivity" type="button">感度分析</button>
+      <button class="tab" data-view="sale" type="button">売却</button>
     </nav>
 
     <main>
@@ -47,14 +47,14 @@
     </main>
 
     <div class="bottom-actions">
-      <button id="saveBtn" class="primary" type="button">菫晏ｭ・/button>
-      <button id="printBtn" type="button">PDF / 蜊ｰ蛻ｷ</button>
+      <button id="saveBtn" class="primary" type="button">保存</button>
+      <button id="printBtn" type="button">PDF / 印刷</button>
     </div>
 
-    <script src="./app.js?v=20260716-10"></script>
+    <script src="./app.js?v=20260716-11"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
-        navigator.serviceWorker.register("./sw.js?v=20260716-10").catch(() => {});
+        navigator.serviceWorker.register("./sw.js?v=20260716-11").catch(() => {});
       }
     </script>
   </body>
