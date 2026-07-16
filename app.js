@@ -351,11 +351,12 @@ function approxIrr(initial, total, years) {
 function equityInvestment() {
   const ownCapital = Number(state.ownCapital || 0);
   const inferredEquity = Math.max(Number(state.purchasePrice || 0) - Number(state.loanAmount || 0), 0);
-  return (ownCapital || inferredEquity) + assumptions().closing;
+  if (ownCapital > 0) return ownCapital;
+  return inferredEquity + assumptions().closing;
 }
 
 function ccrBaseCapital() {
-  return Number(state.ownCapital || 0) + assumptions().closing;
+  return equityInvestment();
 }
 
 function calculateIrr(cashflows) {
@@ -526,7 +527,7 @@ function renderProposal() {
             ${proposalBox("物件価格", manYen(state.purchasePrice), "万円")}
             ${proposalBox("諸費用", manYen(a.closing), "万円")}
             ${proposalBox("総投資額", manYen(a.totalInvestment), "万円")}
-            ${proposalBox("自己資金", manYen(state.ownCapital), "万円")}
+            ${proposalBox("自己資金", manYen(state.ownCapital), "万円(諸費用込み)")}
             ${proposalBox("借入金額", manYen(state.loanAmount), "万円")}
             ${proposalBox("返済期間", `${loanTermYears()}年`)}
           </div>
@@ -627,7 +628,7 @@ function renderInputs() {
       <div class="grid two">
         ${field("金融機関", "bankName", "text")}
         ${moneyField("物件価格", "purchasePrice")}
-        ${moneyField("自己資金", "ownCapital")}
+        ${moneyField("自己資金（諸費用込み）", "ownCapital")}
         ${moneyField("借入金額", "loanAmount")}
         ${field("借入金利（％）", "loanRate", "number", "0.01")}
         ${field("金利上昇開始年（0で上昇なし）", "rateIncreaseStartYear", "number", "1")}
