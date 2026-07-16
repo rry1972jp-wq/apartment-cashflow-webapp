@@ -11,6 +11,7 @@ const defaultState = {
   bankName: "サンプル銀行",
   propertyName: "サンプルアパート",
   location: "東京都",
+  access: "最寄駅 徒歩圏",
   structure: "木造",
   landAreaSqm: 0,
   buildingAreaSqm: 0,
@@ -86,6 +87,7 @@ function blankState() {
     bankName: "",
     propertyName: "",
     location: "",
+    access: "",
     structure: "",
     landAreaSqm: 0,
     buildingAreaSqm: 0,
@@ -351,6 +353,10 @@ function equityInvestment() {
   return (ownCapital || inferredEquity) + assumptions().closing;
 }
 
+function ccrBaseCapital() {
+  return Number(state.ownCapital || 0);
+}
+
 function calculateIrr(cashflows) {
   const npv = (rateValue) => cashflows.reduce((sum, value, index) => sum + value / Math.pow(1 + rateValue, index), 0);
   let low = -0.9999;
@@ -422,6 +428,8 @@ function renderSummary() {
   const a = assumptions();
   const cf1 = annualCashflow(1)[0];
   const surfaceYield = Number(state.purchasePrice || 0) ? a.annualGross / Number(state.purchasePrice) : 0;
+  const ccrBase = ccrBaseCapital();
+  const ccr = ccrBase ? cf1.preTaxCf / ccrBase : 0;
   byId("summary").innerHTML = `
     <div class="panel hero-panel">
       <p class="kicker">${state.customerName || "お客様"} 提出用</p>
@@ -429,10 +437,13 @@ function renderSummary() {
       <div class="grid three">
         ${metric("金融機関", state.bankName || "-")}
         ${metric("所在地", state.location || "-")}
+        ${metric("交通", state.access || "-")}
         ${metric("物件価格", yen.format(Number(state.purchasePrice || 0)))}
+        ${metric("諸費用合計", yen.format(a.closing))}
         ${metric("総投資額", yen.format(a.totalInvestment))}
         ${metric("年間満室賃料", yen.format(a.annualGross))}
         ${metric("表面利回り", pct(surfaceYield))}
+        ${metric("CCR", pct(ccr))}
         ${metric("初年度 税引前CF", yen.format(cf1.preTaxCf), cf1.preTaxCf < 0)}
         ${metric("DSCR", `${cf1.dscr.toFixed(2)}倍`, cf1.dscr < 1)}
         ${metric("返済期間", `${state.loanYears}年`)}
@@ -456,8 +467,8 @@ function renderProposal() {
   const cf1 = annualCashflow(1)[0];
   const debt1 = debtSchedule(1)[0] || { debtService: 0 };
   const surfaceYield = Number(state.purchasePrice || 0) ? a.annualGross / Number(state.purchasePrice) : 0;
-  const equity = equityInvestment();
-  const ccr = equity ? cf1.preTaxCf / equity : 0;
+  const ccrBase = ccrBaseCapital();
+  const ccr = ccrBase ? cf1.preTaxCf / ccrBase : 0;
   const monthlyCf = cf1.preTaxCf / 12;
   const roomCount = `${a.rooms}戸`;
   const today = new Date().toLocaleDateString("ja-JP");
@@ -493,6 +504,7 @@ function renderProposal() {
             <div class="proposal-two-col">
               <div>
                 ${proposalRow("所在地", state.location || "-")}
+                ${proposalRow("交通", state.access || "-")}
                 ${proposalRow("構造", state.structure || "-")}
                 ${proposalRow("築年数", `${Number(state.builtYear || 0)}年`)}
                 ${proposalRow("部屋数", roomCount)}
@@ -598,6 +610,7 @@ function renderInputs() {
         ${field("顧客名", "customerName", "text")}
         ${field("物件名", "propertyName", "text")}
         ${field("所在地", "location", "text")}
+        ${field("交通", "access", "text")}
         ${field("構造", "structure", "text")}
         ${field("土地面積（㎡）", "landAreaSqm", "number", "0.01")}
         ${field("建物面積（㎡）", "buildingAreaSqm", "number", "0.01")}
