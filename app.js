@@ -76,10 +76,22 @@ function normalizeClosingCosts(rows) {
   return normalized.slice(0, 8);
 }
 
+function normalizeRentRoll(rows) {
+  const normalized = Array.isArray(rows)
+    ? rows.map((row) => {
+        const status = row?.[3] === "入居中" || row?.[3] === "蜈･螻・ｸｭ" ? "入居中" : "空室";
+        return [row?.[0] ?? "", row?.[1] ?? "", Number(row?.[2] || 0), status];
+      })
+    : [];
+  while (normalized.length < 20) normalized.push(["", "", 0, "空室"]);
+  return normalized.slice(0, 20);
+}
+
 function normalizeState(data) {
   return {
     ...data,
     closingCosts: normalizeClosingCosts(data.closingCosts),
+    rentRoll: normalizeRentRoll(data.rentRoll),
   };
 }
 
@@ -338,6 +350,7 @@ function annualCashflow(maxYears = 30) {
     const vacancy = gross * rate(state.vacancyRate);
     const effective = gross - vacancy;
     const managementFee = effective * rate(state.propertyManagementRate);
+    const operatingExpense = Number(state.fixedAssetTax || 0) + Number(state.operatingCost || 0) + managementFee;
     const noi = effective - operatingExpense;
     const d = debt[index] || { debtService: 0, end: 0 };
     const preTaxCf = noi - d.debtService;
