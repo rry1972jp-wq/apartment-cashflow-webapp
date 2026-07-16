@@ -604,164 +604,21 @@ td:first-child, th:first-child { text-align: left; }
   main { width: 100%; max-width: none; padding: 0; }
   .view { display: none; }
   .view.active { display: block; break-after: auto; }
-  .panel { border-color: #999; }
   #proposal.view.active {
-    display: block;
     width: 285mm;
     height: 198mm;
     overflow: hidden;
   }
-  .proposal-sheet {
-    width: 285mm;
-    height: 198mm;
+  #proposal.view.active .proposal-sheet {
+    width: 1160px;
     min-height: 0;
     margin: 0;
-    padding: 5mm;
+    padding: 24px;
     box-shadow: none;
     break-after: auto;
-    overflow: hidden;
-  }
-  .proposal-header {
-    grid-template-columns: minmax(0, 1fr) 170px;
-    gap: 10px;
-    padding-bottom: 8px;
-  }
-  .proposal-eyebrow {
-    margin-bottom: 3px;
-    font-size: 9px;
-  }
-  .proposal-header h2 {
-    font-size: 22px;
-    line-height: 1.05;
-  }
-  .proposal-subtitle {
-    margin-top: 4px;
-    font-size: 10px;
-  }
-  .proposal-meta {
-    gap: 2px;
-    padding: 7px 9px;
-    border-left-width: 3px;
-  }
-  .proposal-meta span,
-  .proposal-meta em {
-    font-size: 9px;
-  }
-  .proposal-meta strong {
-    font-size: 11px;
-  }
-  .proposal-hero {
-    grid-template-columns: minmax(220px, 1fr) 1.35fr;
-    gap: 8px;
-    margin: 8px 0;
-  }
-  .proposal-hero-main {
-    min-height: 72px;
-    padding: 9px 12px;
-  }
-  .proposal-hero-main span,
-  .proposal-hero-main small {
-    font-size: 10px;
-  }
-  .proposal-hero-main strong {
-    margin: 4px 0;
-    font-size: 24px;
-  }
-  .proposal-kpi {
-    gap: 6px;
-  }
-  .proposal-main {
-    gap: 8px;
-  }
-  .proposal-panel {
-    padding: 8px;
-  }
-  .proposal-panel h3,
-  .proposal-split h4 {
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    font-size: 12px;
-  }
-  .proposal-money-grid,
-  .proposal-detail-grid {
-    gap: 5px;
-    margin-bottom: 8px;
-  }
-  .proposal-box {
-    min-height: 48px;
-    padding: 6px 8px;
-  }
-  .proposal-box-label {
-    font-size: 9px;
-  }
-  .proposal-box-value {
-    margin-top: 4px;
-    font-size: 17px;
-  }
-  .proposal-box-value span {
-    font-size: 8px;
-  }
-  .proposal-row {
-    grid-template-columns: 86px minmax(0, 1fr);
-    min-height: 22px;
-    font-size: 10px;
-  }
-  .proposal-row span {
-    padding: 4px 5px 4px 0;
-  }
-  .proposal-row strong {
-    padding: 4px 0 4px 5px;
-  }
-  .proposal-flow {
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .proposal-flow > div {
-    min-height: 58px;
-    padding: 8px;
-  }
-  .proposal-flow span {
-    font-size: 9px;
-  }
-  .proposal-flow strong {
-    margin-top: 6px;
-    font-size: 17px;
-  }
-  .proposal-split {
-    gap: 8px;
-  }
-  .proposal-tax-panel {
-    margin-top: 8px;
-    padding: 7px;
-  }
-  .proposal-tax-panel h4 {
-    margin-bottom: 5px;
-    font-size: 11px;
-  }
-  .proposal-tax-row {
-    grid-template-columns: minmax(0, 1fr) 120px;
-    gap: 6px;
-    min-height: 24px;
-    font-size: 9px;
-  }
-  .proposal-tax-row input {
-    padding: 3px 4px;
-    font-size: 10px;
-  }
-  .proposal-tax-row em {
-    font-size: 8px;
-  }
-  .proposal-footer {
-    gap: 10px;
-    margin-top: 8px;
-    padding-top: 6px;
-  }
-  .proposal-footer p {
-    font-size: 8px;
-    line-height: 1.35;
-  }
-  .proposal-footer strong {
-    font-size: 13px;
+    transform: scale(.88);
+    transform-origin: top left;
   }
   input, select { color: #000; background: #fff; }
 }
+
