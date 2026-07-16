@@ -410,6 +410,10 @@ function proposalBox(label, value, unit = "") {
   return `<div class="proposal-box"><div class="proposal-box-label">${label}</div><div class="proposal-box-value">${value}<span>${unit}</span></div></div>`;
 }
 
+function manYen(value) {
+  return number.format(Math.round(Number(value || 0) / 10000));
+}
+
 function proposalRow(label, value) {
   return `<div class="proposal-row"><span>${label}</span><strong>${value}</strong></div>`;
 }
@@ -471,16 +475,16 @@ function renderProposal() {
       <div class="proposal-main">
         <section class="proposal-left">
           <div class="proposal-price-grid">
-            ${proposalBox("物件価格", yen.format(Number(state.purchasePrice || 0)), "税込")}
-            ${proposalBox("諸経費", yen.format(a.closing))}
+            ${proposalBox("物件価格", manYen(state.purchasePrice), "万円(税込)")}
+            ${proposalBox("諸経費", manYen(a.closing), "万円")}
           </div>
 
           <div class="proposal-section">
             <h3>資金計画</h3>
             <div class="proposal-money-grid">
-              ${proposalBox("総事業費", yen.format(a.totalInvestment))}
-              ${proposalBox("自己資金", yen.format(Number(state.ownCapital || 0)))}
-              ${proposalBox("融資金額", yen.format(Number(state.loanAmount || 0)))}
+              ${proposalBox("総事業費", manYen(a.totalInvestment), "万円")}
+              ${proposalBox("自己資金", manYen(state.ownCapital), "万円")}
+              ${proposalBox("融資金額", manYen(state.loanAmount), "万円")}
             </div>
           </div>
 

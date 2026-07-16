@@ -241,9 +241,9 @@ td:first-child, th:first-child { text-align: left; }
 .totals { margin-top: 12px; }
 
 .proposal-sheet {
-  width: min(100%, 1120px);
+  width: min(100%, 1160px);
   margin: 0 auto 18px;
-  padding: 24px;
+  padding: 18px;
   color: #111;
   background: #fff;
   border: 1px solid #111;
@@ -298,8 +298,8 @@ td:first-child, th:first-child { text-align: left; }
 
 .proposal-main {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 26px;
+  grid-template-columns: 1fr 1.02fr;
+  gap: 18px;
 }
 
 .proposal-section {
@@ -321,11 +321,12 @@ td:first-child, th:first-child { text-align: left; }
 .proposal-kpi-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 
 .proposal-money-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .proposal-kpi-grid {
@@ -335,10 +336,11 @@ td:first-child, th:first-child { text-align: left; }
 
 .proposal-box {
   display: grid;
-  grid-template-columns: 92px 1fr;
+  grid-template-columns: 78px minmax(0, 1fr);
   min-height: 58px;
   border: 2px solid #111;
   background: #fff;
+  min-width: 0;
 }
 
 .proposal-box-label {
@@ -348,7 +350,7 @@ td:first-child, th:first-child { text-align: left; }
   padding: 6px;
   color: #fff;
   background: #111;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   text-align: center;
 }
@@ -358,16 +360,28 @@ td:first-child, th:first-child { text-align: left; }
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  padding: 8px;
+  min-width: 0;
+  padding: 8px 6px;
   color: #111;
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 800;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .proposal-box-value span {
-  font-size: 11px;
+  flex: 0 0 auto;
+  font-size: 10px;
   font-weight: 700;
+}
+
+.proposal-money-grid .proposal-box {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
+.proposal-money-grid .proposal-box-value {
+  font-size: 18px;
 }
 
 .proposal-two-col {
