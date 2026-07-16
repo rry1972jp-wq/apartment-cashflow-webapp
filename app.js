@@ -354,7 +354,7 @@ function equityInvestment() {
 }
 
 function ccrBaseCapital() {
-  return Number(state.ownCapital || 0);
+  return Number(state.ownCapital || 0) + assumptions().closing;
 }
 
 function calculateIrr(cashflows) {
