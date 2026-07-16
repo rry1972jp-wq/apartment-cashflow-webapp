@@ -30,6 +30,8 @@ const defaultState = {
   vacancyRate: 5,
   rentGrowthRate: 0,
   fixedAssetTax: 650000,
+  acquisitionTaxEstimate: 0,
+  annualPropertyTaxEstimate: 650000,
   operatingCost: 0,
   propertyManagementRate: 5,
   salePriceGrowthRate: 1,
@@ -106,6 +108,8 @@ function blankState() {
     vacancyRate: 0,
     rentGrowthRate: 0,
     fixedAssetTax: 0,
+    acquisitionTaxEstimate: 0,
+    annualPropertyTaxEstimate: 0,
     operatingCost: 0,
     propertyManagementRate: 0,
     salePriceGrowthRate: 0,
@@ -334,7 +338,6 @@ function annualCashflow(maxYears = 30) {
     const vacancy = gross * rate(state.vacancyRate);
     const effective = gross - vacancy;
     const managementFee = effective * rate(state.propertyManagementRate);
-    const operatingExpense = Number(state.fixedAssetTax || 0) + Number(state.operatingCost || 0) + managementFee;
     const noi = effective - operatingExpense;
     const d = debt[index] || { debtService: 0, end: 0 };
     const preTaxCf = noi - d.debtService;
@@ -418,8 +421,18 @@ function parseNumberInput(value) {
   return Number(String(value ?? "").replace(/,/g, "")) || 0;
 }
 
+function readFormattedInput(target) {
+  if (target.dataset.format === "money") return parseNumberInput(target.value);
+  if (target.dataset.format === "man-yen") return parseNumberInput(target.value) * 10000;
+  return target.type === "number" ? Number(target.value) : target.value;
+}
+
 function formatAmountInput(value) {
   return integer.format(Number(value || 0));
+}
+
+function formatManInput(value) {
+  return integer.format(Math.round(Number(value || 0) / 10000));
 }
 
 function moneyField(label, key) {
@@ -440,6 +453,14 @@ function manYen(value) {
 
 function proposalRow(label, value) {
   return `<div class="proposal-row"><span>${label}</span><strong>${value}</strong></div>`;
+}
+
+function proposalTaxInput(label, key) {
+  return `
+    <label class="proposal-tax-row">
+      <span>${label}</span>
+      <strong><input data-key="${key}" data-format="man-yen" type="text" inputmode="numeric" value="${formatManInput(state[key])}"><em>万円（概算）</em></strong>
+    </label>`;
 }
 
 function renderSummary() {
@@ -572,9 +593,13 @@ function renderProposal() {
             <div>
               <h4>支出内訳</h4>
               ${proposalRow("年間返済額", yen.format(debt1.debtService))}
-              ${proposalRow("固定資産税等", yen.format(Number(state.fixedAssetTax || 0)))}
               ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
+              <div class="proposal-tax-panel">
+                <h4>&#128311;税金・その他</h4>
+                ${proposalTaxInput("不動産取得税（初年度のみ）", "acquisitionTaxEstimate")}
+                ${proposalTaxInput("固都税（年額）", "annualPropertyTaxEstimate")}
+              </div>
             </div>
           </div>
         </section>
@@ -754,7 +779,7 @@ function renderAll() {
 document.addEventListener("input", (event) => {
   const key = event.target.dataset.key;
     if (key) {
-      state[key] = event.target.dataset.format === "money" ? parseNumberInput(event.target.value) : event.target.type === "number" ? Number(event.target.value) : event.target.value;
+      state[key] = readFormattedInput(event.target);
       if (key === "loanYears") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), 40);
       if (key === "rateIncreaseStartYear") state[key] = Math.min(Math.max(Number(event.target.value || 0), 0), loanTermYears());
     }
@@ -773,7 +798,7 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("change", (event) => {
   if (event.target.id === "customerSelect") return;
-  if (event.target.dataset.key) state[event.target.dataset.key] = event.target.dataset.format === "money" ? parseNumberInput(event.target.value) : event.target.value;
+  if (event.target.dataset.key) state[event.target.dataset.key] = readFormattedInput(event.target);
   const rent = event.target.dataset.rent;
   if (rent) {
     const [index, fieldIndex] = rent.split(",").map(Number);

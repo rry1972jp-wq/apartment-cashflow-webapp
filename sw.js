@@ -1,10 +1,10 @@
-const CACHE_NAME = "apartment-sim-v23";
+﻿const CACHE_NAME = "apartment-sim-v26";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=20260716-7",
-  "./app.js?v=20260716-7",
-  "./manifest.json?v=20260716-7",
+  "./styles.css?v=20260716-10",
+  "./app.js?v=20260716-10",
+  "./manifest.json?v=20260716-10",
   "./icon-192.png",
   "./icon-512.png"
 ];
@@ -34,3 +34,4 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html")))
   );
 });
+

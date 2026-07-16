@@ -428,6 +428,64 @@ td:first-child, th:first-child { text-align: left; }
   overflow-wrap: anywhere;
 }
 
+.proposal-tax-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f7f9f7;
+  border: 1px solid #d6c7a1;
+}
+
+.proposal-tax-panel h4 {
+  margin: 0 0 8px;
+  color: #102c2d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.proposal-tax-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 10px;
+  align-items: center;
+  min-height: 34px;
+  border-top: 1px solid #ece3ce;
+  color: #70624a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.proposal-tax-row:first-of-type {
+  border-top: 0;
+}
+
+.proposal-tax-row strong {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px;
+  align-items: baseline;
+  color: #17211d;
+}
+
+.proposal-tax-row input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 6px;
+  border: 1px solid #cfc3a4;
+  background: #fff;
+  color: #102c2d;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.proposal-tax-row em {
+  color: #6a745f;
+  font-size: 10px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
 .proposal-flow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
