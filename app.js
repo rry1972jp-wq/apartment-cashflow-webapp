@@ -263,42 +263,53 @@ function annualPaymentByMonthlyPmt(principal, ratePercent, years) {
   return monthlyPayment * 12;
 }
 
-function monthlyPmtAnnualDebtService(ratePercent = state.loanRate) {
-  const principal = Number(state.loanAmount || 0);
-  return annualPaymentByMonthlyPmt(principal, ratePercent, loanTermYears());
-}
-
-function annualDebtServiceForYear(beginBalance, year) {
-  const principal = Number(state.loanAmount || 0);
-  const years = loanTermYears();
-  const currentRate = loanRateForYear(year);
-  const remainingYears = Math.max(years - year + 1, 1);
-  if (!principal || !years || year > years) return 0;
-  if (state.repaymentType === "元金均等") {
-    return beginBalance * rate(currentRate) + Math.min(principal / years, beginBalance);
-  }
-  return annualPaymentByMonthlyPmt(beginBalance, currentRate, remainingYears);
-}
-
 function debtSchedule(maxYears = 40) {
   let balance = Number(state.loanAmount || 0);
   const years = loanTermYears();
+  const totalMonths = years * 12;
+  const monthlyPrincipal = totalMonths ? balance / totalMonths : 0;
   const rows = [];
+  let monthlyPayment = annualPaymentByMonthlyPmt(balance, state.loanRate, years) / 12;
+
   for (let year = 1; year <= maxYears; year += 1) {
     const begin = balance;
     const currentRate = loanRateForYear(year);
-    const interest = begin * rate(currentRate);
-    const debtService = year <= years ? annualDebtServiceForYear(begin, year) : 0;
-    let principalPaid = year <= years ? debtService - interest : 0;
-    if (state.repaymentType === "元金均等") {
-      principalPaid = year <= years ? Math.min(Number(state.loanAmount || 0) / years, begin) : 0;
+    let debtService = 0;
+    let interest = 0;
+    let principalPaid = 0;
+
+    for (let month = 1; month <= 12; month += 1) {
+      const elapsedMonths = (year - 1) * 12 + month;
+      if (elapsedMonths > totalMonths || balance <= 0) break;
+
+      if (state.repaymentType === "元利均等" && month === 1 && year === rateIncreaseStartYear()) {
+        const remainingMonths = totalMonths - elapsedMonths + 1;
+        monthlyPayment = annualPaymentByMonthlyPmt(balance, currentRate, remainingMonths / 12) / 12;
+      }
+
+      const monthlyInterest = balance * (rate(currentRate) / 12);
+      let monthlyPrincipalPaid;
+      let monthlyDebtService;
+
+      if (state.repaymentType === "元金均等") {
+        monthlyPrincipalPaid = Math.min(monthlyPrincipal, balance);
+        monthlyDebtService = monthlyPrincipalPaid + monthlyInterest;
+      } else {
+        monthlyDebtService = Math.min(monthlyPayment, balance + monthlyInterest);
+        monthlyPrincipalPaid = Math.max(monthlyDebtService - monthlyInterest, 0);
+      }
+
+      monthlyPrincipalPaid = Math.min(monthlyPrincipalPaid, balance);
+      balance = Math.max(0, balance - monthlyPrincipalPaid);
+      debtService += monthlyDebtService;
+      interest += monthlyInterest;
+      principalPaid += monthlyPrincipalPaid;
     }
-    principalPaid = Math.min(Math.max(principalPaid, 0), begin);
-    balance = Math.max(0, begin - principalPaid);
+
     rows.push({
       year,
       begin,
-      debtService: year <= years ? interest + principalPaid : 0,
+      debtService,
       rate: currentRate,
       interest,
       principal: principalPaid,
@@ -320,7 +331,6 @@ function annualCashflow(maxYears = 30) {
     const vacancy = gross * rate(state.vacancyRate);
     const effective = gross - vacancy;
     const managementFee = effective * rate(state.propertyManagementRate);
-    const repairs = Number(state.closingCosts.repairs || 0);
     const operatingExpense = Number(state.fixedAssetTax || 0) + Number(state.operatingCost || 0) + managementFee;
     const noi = effective - operatingExpense;
     const d = debt[index] || { debtService: 0, end: 0 };
