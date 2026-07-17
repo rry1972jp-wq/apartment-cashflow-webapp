@@ -478,10 +478,6 @@ function proposalTaxInput(label, key) {
     </label>`;
 }
 
-function proposalTaxNote() {
-  return `<textarea class="proposal-tax-note" data-key="taxNote" placeholder="注釈を入力">${state.taxNote || ""}</textarea>`;
-}
-
 function renderSummary() {
   const a = assumptions();
   const cf1 = annualCashflow(1)[0];
@@ -616,9 +612,8 @@ function renderProposal() {
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
               <div class="proposal-tax-panel">
                 <h4>&#128311;税金・その他</h4>
-                ${proposalTaxInput("不動産取得税（初年度のみ）", "acquisitionTaxEstimate")}
-                ${proposalTaxInput("固都税（年額）", "annualPropertyTaxEstimate")}
-                ${proposalTaxNote()}
+                ${proposalTaxInput("不動産取得税", "acquisitionTaxEstimate")}
+                ${proposalTaxInput("固都税", "annualPropertyTaxEstimate")}
               </div>
             </div>
           </div>
