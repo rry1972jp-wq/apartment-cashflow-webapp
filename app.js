@@ -32,6 +32,7 @@ const defaultState = {
   fixedAssetTax: 650000,
   acquisitionTaxEstimate: 0,
   annualPropertyTaxEstimate: 650000,
+  taxNote: "",
   operatingCost: 0,
   propertyManagementRate: 5,
   salePriceGrowthRate: 1,
@@ -122,6 +123,7 @@ function blankState() {
     fixedAssetTax: 0,
     acquisitionTaxEstimate: 0,
     annualPropertyTaxEstimate: 0,
+    taxNote: "",
     operatingCost: 0,
     propertyManagementRate: 0,
     salePriceGrowthRate: 0,
@@ -476,6 +478,10 @@ function proposalTaxInput(label, key) {
     </label>`;
 }
 
+function proposalTaxNote() {
+  return `<textarea class="proposal-tax-note" data-key="taxNote" placeholder="注釈を入力">${state.taxNote || ""}</textarea>`;
+}
+
 function renderSummary() {
   const a = assumptions();
   const cf1 = annualCashflow(1)[0];
@@ -610,7 +616,9 @@ function renderProposal() {
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
               <div class="proposal-tax-panel">
                 <h4>&#128311;税金・その他</h4>
-                <div class="proposal-tax-blank" aria-hidden="true"></div>
+                ${proposalTaxInput("不動産取得税（初年度のみ）", "acquisitionTaxEstimate")}
+                ${proposalTaxInput("固都税（年額）", "annualPropertyTaxEstimate")}
+                ${proposalTaxNote()}
               </div>
             </div>
           </div>
@@ -822,7 +830,7 @@ document.addEventListener("change", (event) => {
 
 document.addEventListener("focusout", (event) => {
   if (event.target.id === "customerSelect") return;
-  if (event.target.matches("input, select")) {
+  if (event.target.matches("input, select, textarea")) {
     renderAll();
   }
 });
