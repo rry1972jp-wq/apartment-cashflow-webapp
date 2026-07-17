@@ -632,7 +632,6 @@ function renderProposal() {
       </div>
 
       <div class="proposal-footer">
-        <p>本シミュレーションは満室時想定に基づく試算です。市場動向、空室、賃料変動、金利変動、修繕費等により実際の収支は変動します。</p>
         <strong>Agratio urban design Inc.</strong>
       </div>
     </div>`;
