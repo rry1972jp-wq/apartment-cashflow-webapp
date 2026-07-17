@@ -470,14 +470,6 @@ function proposalRow(label, value) {
   return `<div class="proposal-row"><span>${label}</span><strong>${value}</strong></div>`;
 }
 
-function proposalTaxInput(label, key) {
-  return `
-    <label class="proposal-tax-row">
-      <span>${label}</span>
-      <strong><input data-key="${key}" data-format="man-yen" type="text" inputmode="numeric" value="${formatManInput(state[key])}"><em>万円（概算）</em></strong>
-    </label>`;
-}
-
 function renderSummary() {
   const a = assumptions();
   const cf1 = annualCashflow(1)[0];
@@ -610,10 +602,10 @@ function renderProposal() {
               ${proposalRow("年間返済額", yen.format(debt1.debtService))}
               ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
-              <div class="proposal-tax-panel">
-                <h4>&#128311;税金・その他</h4>
-              </div>
             </div>
+          </div>
+          <div class="proposal-tax-panel">
+            <h4>&#128311;税金・その他</h4>
           </div>
         </section>
       </div>
