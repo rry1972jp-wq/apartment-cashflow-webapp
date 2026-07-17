@@ -456,9 +456,9 @@ td:first-child, th:first-child { text-align: left; }
   display: grid;
   grid-template-columns: minmax(0, 1fr) 126px;
   gap: 8px;
-  align-items: center;
-  min-height: 64px;
-  padding: 8px 10px;
+  align-items: start;
+  min-height: 118px;
+  padding: 10px;
   border-top: 0;
   border-right: 1px solid #ece3ce;
   color: #70624a;
@@ -474,7 +474,7 @@ td:first-child, th:first-child { text-align: left; }
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 5px;
-  align-items: baseline;
+  align-items: center;
   color: #17211d;
 }
 
