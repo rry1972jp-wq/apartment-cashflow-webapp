@@ -623,9 +623,13 @@ td:first-child, th:first-child { text-align: left; }
   #proposal.view.active .proposal-sheet {
     width: min(100%, 1160px);
     margin: 0 auto;
-    padding: 24px;
+    padding: 14px;
     box-shadow: 0 16px 38px rgba(31, 40, 36, .16);
     break-after: auto;
+    break-inside: avoid;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    zoom: .78;
   }
   input, select { color: inherit; background: #fff; }
 }
