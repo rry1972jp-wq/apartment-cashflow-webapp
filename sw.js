@@ -1,10 +1,10 @@
-﻿const CACHE_NAME = "apartment-sim-v40";
+﻿const CACHE_NAME = "apartment-sim-v42";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=20260717-6",
-  "./app.js?v=20260717-6",
-  "./manifest.json?v=20260717-6",
+  "./styles.css?v=20260717-8",
+  "./app.js?v=20260717-8",
+  "./manifest.json?v=20260717-8",
   "./icon-192.png",
   "./icon-512.png"
 ];

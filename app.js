@@ -612,13 +612,6 @@ function renderProposal() {
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
               <div class="proposal-tax-panel">
                 <h4>&#128311;税金・その他</h4>
-                ${proposalTaxInput("不動産取得税", "acquisitionTaxEstimate")}
-                ${proposalTaxInput("固都税", "annualPropertyTaxEstimate")}
-                <div class="proposal-tax-notes">
-                  <p>・「年間CF」には固都税額は反映されておりません。</p>
-                  <p>・本シミュレーションは満室想定に基づく試算です。市場動向、空室、賃料変動、金利変動、修繕費等により実際の収支は変動します。</p>
-                  <p>・記載の金利は2026年7月時点の金利に基づきます。</p>
-                </div>
               </div>
             </div>
           </div>
