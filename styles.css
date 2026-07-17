@@ -457,7 +457,7 @@ td:first-child, th:first-child { text-align: left; }
   grid-template-columns: minmax(0, 1fr) 126px;
   gap: 8px;
   align-items: start;
-  min-height: 118px;
+  min-height: 70px;
   padding: 10px;
   border-top: 0;
   border-right: 1px solid #ece3ce;
@@ -496,6 +496,19 @@ td:first-child, th:first-child { text-align: left; }
   font-size: 10px;
   font-style: normal;
   white-space: nowrap;
+}
+
+.proposal-tax-notes {
+  grid-column: 1 / -1;
+  padding: 9px 0 0;
+  border-top: 5px solid #000;
+  color: #59665f;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.proposal-tax-notes p {
+  margin: 0 0 6px;
 }
 
 .proposal-flow {
