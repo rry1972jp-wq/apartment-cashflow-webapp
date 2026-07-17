@@ -622,6 +622,11 @@ function renderProposal() {
                 <em>万円（概算）</em>
               </label>
             </div>
+            <div class="proposal-tax-notes">
+              <p>・本シミュレーションは満室時想定に基づく試算です。市場動向、空室、賃料変動、金利変動、修繕費等により<br>　実際の収支は変動します。</p>
+              <p>・「年間CF」には固都税額は反映されておりません。</p>
+              <p>・本シュミレーションに募集関係費用は反映されておりません。</p>
+            </div>
           </div>
         </section>
       </div>

@@ -489,6 +489,17 @@ td:first-child, th:first-child { text-align: left; }
   white-space: nowrap;
 }
 
+.proposal-tax-notes {
+  padding: 0 12px 12px;
+  color: #66736d;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.proposal-tax-notes p {
+  margin: 3px 0 0;
+}
+
 .proposal-flow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
