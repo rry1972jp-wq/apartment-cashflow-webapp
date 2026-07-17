@@ -610,8 +610,7 @@ function renderProposal() {
               ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
               <div class="proposal-tax-panel">
                 <h4>&#128311;税金・その他</h4>
-                ${proposalTaxInput("不動産取得税（初年度のみ）", "acquisitionTaxEstimate")}
-                ${proposalTaxInput("固都税（年額）", "annualPropertyTaxEstimate")}
+                <div class="proposal-tax-blank" aria-hidden="true"></div>
               </div>
             </div>
           </div>
