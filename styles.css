@@ -447,6 +447,48 @@ td:first-child, th:first-child { text-align: left; }
   font-weight: 900;
 }
 
+.proposal-tax-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.proposal-tax-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #17211d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.proposal-tax-field span {
+  line-height: 1.35;
+}
+
+.proposal-tax-field input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 7px;
+  border: 1px solid #cfc3a6;
+  border-radius: 5px;
+  background: #fffdf7;
+  color: #102c2d;
+  font: inherit;
+  text-align: right;
+}
+
+.proposal-tax-field em {
+  color: #70624a;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
 .proposal-flow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -551,6 +593,8 @@ td:first-child, th:first-child { text-align: left; }
   .proposal-money-grid,
   .proposal-detail-grid,
   .proposal-flow { grid-template-columns: 1fr; }
+  .proposal-tax-grid { grid-template-columns: 1fr; }
+  .proposal-tax-field { grid-template-columns: minmax(0, 1fr) 82px auto; }
   main { padding: 10px; }
   .panel { padding: 12px; }
   h1 { font-size: 17px; }

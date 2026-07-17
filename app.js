@@ -33,6 +33,8 @@ const defaultState = {
   acquisitionTaxEstimate: 0,
   annualPropertyTaxEstimate: 650000,
   taxNote: "",
+  proposalAcquisitionTax: 0,
+  proposalAnnualPropertyTax: 0,
   operatingCost: 0,
   propertyManagementRate: 5,
   salePriceGrowthRate: 1,
@@ -124,6 +126,8 @@ function blankState() {
     acquisitionTaxEstimate: 0,
     annualPropertyTaxEstimate: 0,
     taxNote: "",
+    proposalAcquisitionTax: 0,
+    proposalAnnualPropertyTax: 0,
     operatingCost: 0,
     propertyManagementRate: 0,
     salePriceGrowthRate: 0,
@@ -605,7 +609,19 @@ function renderProposal() {
             </div>
           </div>
           <div class="proposal-tax-panel">
-            <h4>&#128311;税金・その他</h4>
+            <h4>&#128311;税額・その他</h4>
+            <div class="proposal-tax-grid">
+              <label class="proposal-tax-field">
+                <span>不動産取得税（初年度のみ）</span>
+                <input data-key="proposalAcquisitionTax" data-format="man-yen" type="text" inputmode="numeric" value="${formatManInput(state.proposalAcquisitionTax)}">
+                <em>万円（概算）</em>
+              </label>
+              <label class="proposal-tax-field">
+                <span>固都税（年額）</span>
+                <input data-key="proposalAnnualPropertyTax" data-format="man-yen" type="text" inputmode="numeric" value="${formatManInput(state.proposalAnnualPropertyTax)}">
+                <em>万円（概算）</em>
+              </label>
+            </div>
           </div>
         </section>
       </div>
