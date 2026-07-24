@@ -561,6 +561,7 @@ function renderProposal() {
             ${proposalBox("総投資額", manYen(a.totalInvestment), "万円")}
             ${proposalBox("自己資金", manYen(state.ownCapital), "万円(諸費用込み)")}
             ${proposalBox("借入金額", manYen(state.loanAmount), "万円")}
+            ${proposalBox("借入金利", `年${Number(state.loanRate || 0).toFixed(2)}%`)}
             ${proposalBox("返済期間", `${loanTermYears()}年`)}
           </div>
 
