@@ -11,15 +11,29 @@
     <title>アパート収支シミュレーション</title>
     <link rel="manifest" href="./manifest.json?v=20260724-1" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260724-1" />
+    <link rel="stylesheet" href="./styles.css?v=20260928-1" />
   </head>
   <body>
+    <section id="authScreen" class="auth-screen" aria-label="ログイン">
+      <form id="loginForm" class="login-card">
+        <p class="eyebrow">Apartment Cashflow</p>
+        <h1>ログイン</h1>
+        <p>登録済みのメールアドレスとパスワードを入力してください。</p>
+        <label for="loginEmail">メールアドレス</label>
+        <input id="loginEmail" type="email" autocomplete="username" required />
+        <label for="loginPassword">パスワード</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required />
+        <p id="loginError" class="login-error" role="alert" aria-live="polite"></p>
+        <button id="loginBtn" class="primary" type="submit" disabled>認証を確認中…</button>
+      </form>
+    </section>
+    <div id="appShell" hidden>
     <header class="app-header">
       <div>
         <p class="eyebrow">Apartment Cashflow</p>
         <h1>アパート収支シミュレーション</h1>
       </div>
-      <button id="resetBtn" class="icon-button" type="button" aria-label="初期化">↺</button>
+      <div class="header-actions"><button id="logoutBtn" type="button">ログアウト</button><button id="resetBtn" class="icon-button" type="button" aria-label="初期化">↺</button></div>
     </header>
 
     <nav class="tabs" aria-label="画面切替">
@@ -51,7 +65,8 @@
       <button id="printBtn" type="button">PDF / 印刷</button>
     </div>
 
-    <script src="./app.js?v=20260724-1"></script>
+    </div>
+    <script type="module" src="./auth.js?v=20260928-1"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
         navigator.serviceWorker.register("./sw.js?v=20260724-1").catch(() => {});

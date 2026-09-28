@@ -1,9 +1,11 @@
-const CACHE_NAME = "apartment-sim-v49";
+const CACHE_NAME = "apartment-sim-v50";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=20260724-1",
-  "./app.js?v=20260724-1",
+  "./styles.css?v=20260928-1",
+  "./auth.js?v=20260928-1",
+  "./firebase-config.js",
+  "./app.js?v=20260928-1",
   "./manifest.json?v=20260724-1",
   "./icon-192.png",
   "./icon-512.png"

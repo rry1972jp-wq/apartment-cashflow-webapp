@@ -629,3 +629,13 @@ td:first-child, th:first-child { text-align: left; }
   }
   input, select { color: inherit; background: #fff; }
 }
+/* Authentication gate */
+[hidden] { display: none !important; }
+.auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f3f6f5; }
+.login-card { width: min(100%, 420px); padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 10px 32px #123b3b18; display: grid; gap: 12px; }
+.login-card h1 { margin: 0; }
+.login-card p { margin: 0 0 8px; }
+.login-card input { width: 100%; box-sizing: border-box; padding: 12px; font: inherit; }
+.login-card button { padding: 12px; }
+.login-error { color: #a52525; min-height: 1.4em; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
