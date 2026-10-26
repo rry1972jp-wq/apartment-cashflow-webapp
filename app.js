@@ -346,7 +346,9 @@ function monthlyRent() {
 function assumptions() {
   const rooms = enteredRentRollRows().length;
   const avgRent = rooms ? monthlyRent() / rooms : 0;
-  const closing = state.closingCosts.reduce((sum, row) => sum + Number(row[1] || 0), 0);
+  const closing = state.closingCosts
+    .filter((row) => !["管理委託手数料", "共益費", "共益費（BM費、ネット年額利用料、水光熱費）"].includes(row[0]))
+    .reduce((sum, row) => sum + Number(row[1] || 0), 0);
   const totalInvestment = Number(state.purchasePrice || 0) + closing;
   return {
     rooms,
@@ -603,7 +605,7 @@ function renderSummary() {
         ${metric("所在地", escapeHtml(state.location || "-"))}
         ${metric("交通", state.access || "-")}
         ${metric("物件価格", yen.format(Number(state.purchasePrice || 0)))}
-        ${metric("諸費用合計", yen.format(a.closing))}
+        ${metric("購入諸費用合計", yen.format(a.closing))}
         ${metric("総投資額", yen.format(a.totalInvestment))}
         ${metric("年間満室賃料", yen.format(a.annualGross))}
         ${metric("表面利回り", pct2(surfaceYield))}
@@ -671,7 +673,7 @@ function renderProposal() {
           <h3>資金計画</h3>
           <div class="proposal-money-grid">
             ${proposalBox("物件価格", manYen(state.purchasePrice), "万円")}
-            ${proposalBox("諸費用", manYen(a.closing), "万円")}
+            ${proposalBox("購入諸費用", manYen(a.closing), "万円")}
             ${proposalBox("総投資額", manYen(a.totalInvestment), "万円")}
             ${proposalBox("自己資金", manYen(state.ownCapital), "万円(諸費用込み)")}
             ${proposalBox("借入金額", manYen(state.loanAmount), "万円")}
@@ -717,9 +719,9 @@ function renderProposal() {
               ${proposalRow("実効総収入", proposalAnnualMonthly(cf1.effective))}
             </div>
             <div>
-              <h4>支出内訳</h4>
+              <h4>支出内訳（運営経費）</h4>
               ${proposalRow("年間返済額", proposalAnnualMonthly(debt1.debtService))}
-              ${proposalRow("運営経費", proposalAnnualMonthly(operatingCostAmount()))}
+              ${proposalRow("運営経費（BM費、ネット年額利用料、水光熱費）", proposalAnnualMonthly(operatingCostAmount()))}
               ${proposalRow("管理委託料", proposalAnnualMonthly(cf1.managementFee))}
             </div>
           </div>
@@ -818,7 +820,7 @@ function renderInputs() {
     </div>
     <div class="panel">
       <h2>入力時の注意事項</h2>
-      <p class="note">率は「5」のように整数で入力してください。金利上昇開始年を0にすると金利上昇なしで計算します。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。諸費用で共益費・管理委託手数料を選択している場合は、その金額をそれぞれ年間の運営経費・管理委託料に使用し、この画面の運営経費・管理委託料率より優先します。購入時の諸費用合計にも含まれます。</p>
+      <p class="note">率は「5」のように整数で入力してください。金利上昇開始年を0にすると金利上昇なしで計算します。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。諸費用で共益費・管理委託手数料を選択している場合は、その金額をそれぞれ年間の運営経費・管理委託料に使用し、この画面の運営経費・管理委託料率より優先します。この2項目は購入諸費用合計に含めず、総投資額・借入金額の計算対象から除外します。</p>
     </div>`;
 }
 
@@ -861,7 +863,7 @@ function renderCosts() {
       <h2>諸費用入力</h2>
       ${table(["項目", "金額"], rows, "compact")}
       <div class="grid two totals">
-        ${metric("諸費用合計", yen.format(assumptions().closing))}
+        ${metric("購入諸費用合計", yen.format(assumptions().closing))}
         ${metric("総投資額", yen.format(assumptions().totalInvestment))}
       </div>
     </div>`;
