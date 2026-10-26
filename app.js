@@ -73,7 +73,7 @@ function emptyClosingCostRows(count = 8) {
 
 function normalizeClosingCosts(rows) {
   const normalized = Array.isArray(rows)
-    ? rows.map((row) => [row?.[0] ?? "", Number(row?.[1] || 0)])
+    ? rows.map((row) => [row?.[0] === "共益費" ? "共益費（BM費、ネット年額利用料、水光熱費）" : row?.[0] ?? "", Number(row?.[1] || 0)])
     : [];
   while (normalized.length < 8) normalized.push(["", 0]);
   return normalized.slice(0, 8);
@@ -149,6 +149,7 @@ function loadState() {
 }
 
 function saveState() {
+  updateLoanAmount();
   localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify(state));
 }
 
@@ -165,6 +166,98 @@ function saveCustomerRecords(records) {
   localStorage.setItem(CUSTOMER_STORE_KEY, JSON.stringify(records));
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function validateCustomerTransfer(payload) {
+  if (!payload || payload.format !== "ApartmentCashflow.CustomerData" || payload.version !== 1 || !Array.isArray(payload.customers) || payload.customers.length > 1000) {
+    throw new Error("このアプリの顧客データファイル（形式1）を選択してください。");
+  }
+  const ids = new Set();
+  return payload.customers.map((record) => {
+    if (!record || typeof record.id !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(record.id) || ids.has(record.id) || !record.data || typeof record.data !== "object" || Array.isArray(record.data)) throw new Error("顧客データの形式またはIDが正しくありません。");
+    ids.add(record.id);
+    const data = record.data;
+    for (const key of ["purchasePrice", "ownCapital", "loanAmount", "closingCosts", "rentRoll"]) {
+      if (!Object.hasOwn(data, key)) throw new Error("顧客データに必要な項目がありません。");
+    }
+    for (const [key, value] of Object.entries(data)) {
+      if (!Object.hasOwn(defaultState, key)) throw new Error("この版では読み込めない項目が含まれています。");
+      if (key === "closingCosts" || key === "rentRoll") {
+        const width = key === "closingCosts" ? 2 : 4;
+        if (!Array.isArray(value) || value.length > (width === 2 ? 8 : 20)) throw new Error("明細の形式が正しくありません。");
+        for (const row of value) {
+          if (!Array.isArray(row) || row.length !== width) throw new Error("明細の形式が正しくありません。");
+          row.forEach((cell, index) => {
+            const numeric = index === (width === 2 ? 1 : 2);
+            if (numeric ? typeof cell !== "number" || !Number.isFinite(cell) : typeof cell !== "string" || cell.length > 2000) throw new Error("明細に読み込めない値が含まれています。");
+          });
+          if (width === 4 && !["入居中", "空室"].includes(row[3])) throw new Error("入居状況が正しくありません。");
+        }
+      } else if (typeof defaultState[key] === "number" ? typeof value !== "number" || !Number.isFinite(value) : typeof value !== "string" || value.length > 2000) {
+        throw new Error("顧客データに読み込めない値が含まれています。");
+      }
+    }
+    const normalized = normalizeState({ ...cloneDefault(), ...data });
+    if (!customerTitle(normalized)) throw new Error("顧客名・物件名のないデータは読み込めません。");
+    return { id: record.id, title: customerTitle(normalized), updatedAt: typeof record.updatedAt === "string" ? record.updatedAt.slice(0, 100) : "", data: normalized };
+  });
+}
+
+function exportCustomerData() {
+  try {
+    const customers = loadCustomerRecords();
+    if (!customers.length) return alert("先に「現在の内容を保存」で顧客データを保存してください。");
+    const payload = { format: "ApartmentCashflow.CustomerData", version: 1, exportedAt: new Date().toISOString(), customers };
+    validateCustomerTransfer(payload);
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `apartment-customers-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    alert(`書き出せませんでした。${error.message}`);
+  }
+}
+
+let customerImportInProgress = false;
+async function importCustomerData(file) {
+  if (!file || customerImportInProgress) return;
+  customerImportInProgress = true;
+  try {
+    if (file.size > 5 * 1024 * 1024) throw new Error("5MB以下の顧客データファイルを選択してください。");
+    const incoming = validateCustomerTransfer(JSON.parse(await file.text()));
+    const current = loadCustomerRecords();
+    const signature = (data) => JSON.stringify(Object.keys(defaultState).map((key) => data[key]));
+    const signatures = new Set(current.map((record) => signature(normalizeState({ ...cloneDefault(), ...record.data }))));
+    const ids = new Set(current.map((record) => record.id));
+    const additions = [];
+    for (const record of incoming) {
+      const key = signature(record.data);
+      if (signatures.has(key)) continue;
+      if (ids.has(record.id)) record.id = `customer-${crypto.randomUUID()}`;
+      ids.add(record.id);
+      signatures.add(key);
+      additions.push(record);
+    }
+    if (!additions.length) return alert("追加する顧客データはありません。同じ内容のデータは読み込み済みです。");
+    if (!confirm(`顧客データを${additions.length}件追加します（同じ内容${incoming.length - additions.length}件は追加しません）。\nこのPCの保存済み顧客と編集中の内容は残します。\n同じIDで内容が異なるデータは別の顧客データとして追加します。\n読み込みますか？`)) return;
+    // Re-read after confirmation so an update in another tab is never overwritten.
+    if (JSON.stringify(loadCustomerRecords()) !== JSON.stringify(current)) throw new Error("顧客一覧が更新されました。もう一度読み込んでください。");
+    saveCustomerRecords([...current, ...additions]);
+    renderInputs();
+    alert(`顧客データを${additions.length}件追加しました。「保存済み顧客」から選んで開いてください。`);
+  } catch (error) {
+    alert(`読み込めませんでした。${error.message}`);
+  } finally {
+    customerImportInProgress = false;
+    const input = byId("customerDataFile");
+    if (input) input.value = "";
+  }
+}
+
 function customerTitle(data = state) {
   const customer = String(data.customerName || "").trim();
   const property = String(data.propertyName || "").trim();
@@ -175,7 +268,7 @@ function customerTitle(data = state) {
 function renderCustomerOptions() {
   return loadCustomerRecords()
     .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
-    .map((record) => `<option value="${record.id}" ${record.id === currentCustomerId ? "selected" : ""}>${record.title}</option>`)
+    .map((record) => `<option value="${escapeHtml(record.id)}" ${record.id === currentCustomerId ? "selected" : ""}>${escapeHtml(record.title)}</option>`)
     .join("");
 }
 
@@ -265,6 +358,12 @@ function assumptions() {
   };
 }
 
+function updateLoanAmount() {
+  state.loanAmount = Math.max(assumptions().totalInvestment - Number(state.ownCapital || 0), 0);
+  const input = document.querySelector('[data-key="loanAmount"]');
+  if (input) input.value = formatAmountInput(state.loanAmount);
+}
+
 function loanTermYears() {
   return Math.min(Math.max(Math.floor(Number(state.loanYears || 0)), 0), 40);
 }
@@ -345,6 +444,15 @@ function debtSchedule(maxYears = 40) {
   return rows;
 }
 
+function closingCostAmount(names) {
+  const rows = state.closingCosts.filter((row) => names.includes(row[0]));
+  return rows.length ? rows.reduce((sum, row) => sum + Number(row[1] || 0), 0) : null;
+}
+
+function operatingCostAmount() {
+  return closingCostAmount(["共益費", "共益費（BM費、ネット年額利用料、水光熱費）"]) ?? Number(state.operatingCost || 0);
+}
+
 function annualCashflow(maxYears = 30) {
   const base = assumptions();
   const debt = debtSchedule(Math.max(40, maxYears));
@@ -355,8 +463,8 @@ function annualCashflow(maxYears = 30) {
     const gross = base.annualGross * growth;
     const vacancy = gross * rate(state.vacancyRate);
     const effective = gross - vacancy;
-    const managementFee = effective * rate(state.propertyManagementRate);
-    const operatingExpense = Number(state.fixedAssetTax || 0) + Number(state.operatingCost || 0) + managementFee;
+    const managementFee = closingCostAmount(["管理委託手数料"]) ?? effective * rate(state.propertyManagementRate);
+    const operatingExpense = Number(state.fixedAssetTax || 0) + operatingCostAmount() + managementFee;
     const noi = effective - operatingExpense;
     const d = debt[index] || { debtService: 0, end: 0 };
     const preTaxCf = noi - d.debtService;
@@ -433,7 +541,7 @@ function table(headers, rows, cls = "") {
 
 function field(label, key, type = "number", step = "1") {
   const inputMode = type === "number" ? ' inputmode="decimal"' : "";
-  return `<div class="field"><label>${label}</label><input data-key="${key}" type="${type}" step="${step}"${inputMode} value="${state[key] ?? ""}"></div>`;
+  return `<div class="field"><label>${label}</label><input data-key="${key}" type="${type}" step="${step}"${inputMode} value="${escapeHtml(state[key] ?? "")}"></div>`;
 }
 
 function parseNumberInput(value) {
@@ -463,7 +571,12 @@ function metric(label, value, warn = false) {
 }
 
 function proposalBox(label, value, unit = "") {
-  return `<div class="proposal-box"><div class="proposal-box-label">${label}</div><div class="proposal-box-value">${value}<span>${unit}</span></div></div>`;
+  const extraClass = label === "自己資金" ? " proposal-own-capital" : "";
+  return `<div class="proposal-box${extraClass}"><div class="proposal-box-label">${label}</div><div class="proposal-box-value">${value}<span>${unit}</span></div></div>`;
+}
+
+function proposalAnnualMonthly(value) {
+  return `${yen.format(value)} <small class="proposal-monthly">（月々${yen.format(Number(value || 0) / 12)}）</small>`;
 }
 
 function manYen(value) {
@@ -471,7 +584,8 @@ function manYen(value) {
 }
 
 function proposalRow(label, value) {
-  return `<div class="proposal-row"><span>${label}</span><strong>${value}</strong></div>`;
+  const extraClass = String(value).includes('class="proposal-monthly"') ? " proposal-with-monthly" : "";
+  return `<div class="proposal-row${extraClass}"><span>${label}</span><strong>${value}</strong></div>`;
 }
 
 function renderSummary() {
@@ -482,11 +596,11 @@ function renderSummary() {
   const ccr = ccrBase ? cf1.preTaxCf / ccrBase : 0;
   byId("summary").innerHTML = `
     <div class="panel hero-panel">
-      <p class="kicker">${state.customerName || "お客様"} 提出用</p>
-      <h2>${state.propertyName || "物件名未入力"}</h2>
+      <p class="kicker">${escapeHtml(state.customerName || "お客様")} 提出用</p>
+      <h2>${escapeHtml(state.propertyName || "物件名未入力")}</h2>
       <div class="grid three">
-        ${metric("金融機関", state.bankName || "-")}
-        ${metric("所在地", state.location || "-")}
+        ${metric("金融機関", escapeHtml(state.bankName || "-"))}
+        ${metric("所在地", escapeHtml(state.location || "-"))}
         ${metric("交通", state.access || "-")}
         ${metric("物件価格", yen.format(Number(state.purchasePrice || 0)))}
         ${metric("諸費用合計", yen.format(a.closing))}
@@ -502,7 +616,7 @@ function renderSummary() {
     <div class="panel">
       <h2>物件概要</h2>
       <div class="grid three">
-        ${metric("構造", state.structure || "-")}
+        ${metric("構造", escapeHtml(state.structure || "-"))}
         ${metric("土地面積", `${number.format(state.landAreaSqm)}㎡`)}
         ${metric("建物面積", `${number.format(state.buildingAreaSqm)}㎡`)}
         ${metric("建蔽率", `${state.buildingCoverage}%`)}
@@ -529,13 +643,13 @@ function renderProposal() {
       <header class="proposal-header">
         <div>
           <p class="proposal-eyebrow">Investment Proposal</p>
-          <h2>${state.propertyName || "物件名未入力"}</h2>
-          <p class="proposal-subtitle">${state.location || "所在地未入力"}　${state.access || ""}</p>
+          <h2>${escapeHtml(state.propertyName || "物件名未入力")}</h2>
+          <p class="proposal-subtitle">${escapeHtml(state.location || "所在地未入力")}　${escapeHtml(state.access || "")}</p>
         </div>
         <div class="proposal-meta">
           <span>${today}</span>
-          <strong>${state.customerName || "お客様"} 御中</strong>
-          <em>${state.bankName || "金融機関未入力"}</em>
+          <strong>${escapeHtml(state.customerName || "お客様")} 御中</strong>
+          <em>${escapeHtml(state.bankName || "金融機関未入力")}</em>
         </div>
       </header>
 
@@ -567,9 +681,9 @@ function renderProposal() {
 
           <h3>物件概要</h3>
           <div class="proposal-detail-grid">
-            ${proposalRow("所在地", state.location || "-")}
-            ${proposalRow("交通", state.access || "-")}
-            ${proposalRow("構造", state.structure || "-")}
+            ${proposalRow("所在地", escapeHtml(state.location || "-"))}
+            ${proposalRow("交通", escapeHtml(state.access || "-"))}
+            ${proposalRow("構造", escapeHtml(state.structure || "-"))}
             ${proposalRow("築年数", `${Number(state.builtYear || 0)}年`)}
             ${proposalRow("部屋数", roomCount)}
             ${proposalRow("土地面積", `${number.format(Number(state.landAreaSqm || 0))}㎡`)}
@@ -598,15 +712,15 @@ function renderProposal() {
           <div class="proposal-split">
             <div>
               <h4>収入内訳</h4>
-              ${proposalRow("満室想定賃料", yen.format(a.annualGross))}
+              ${proposalRow("満室想定賃料", proposalAnnualMonthly(a.annualGross))}
               ${proposalRow("空室損", yen.format(cf1.vacancy))}
-              ${proposalRow("実効総収入", yen.format(cf1.effective))}
+              ${proposalRow("実効総収入", proposalAnnualMonthly(cf1.effective))}
             </div>
             <div>
               <h4>支出内訳</h4>
-              ${proposalRow("年間返済額", yen.format(debt1.debtService))}
-              ${proposalRow("運営経費", yen.format(Number(state.operatingCost || 0)))}
-              ${proposalRow("管理委託料", yen.format(cf1.managementFee))}
+              ${proposalRow("年間返済額", proposalAnnualMonthly(debt1.debtService))}
+              ${proposalRow("運営経費", proposalAnnualMonthly(operatingCostAmount()))}
+              ${proposalRow("管理委託料", proposalAnnualMonthly(cf1.managementFee))}
             </div>
           </div>
           <div class="proposal-tax-panel">
@@ -657,6 +771,12 @@ function renderInputs() {
           <button id="newCustomerBtn" type="button">新規入力</button>
         </div>
       </div>
+      <div class="actions-row">
+        <button id="exportCustomerDataBtn" type="button">顧客データを書き出す</button>
+        <button id="importCustomerDataBtn" type="button">顧客データを読み込む</button>
+      </div>
+      <input id="customerDataFile" type="file" accept=".json,application/json" hidden>
+      <p class="note">保存済み顧客をファイルに書き出し、別PCのこのアプリで読み込めます。編集中の内容は先に「現在の内容を保存」を押してください。読み込みは既存データを残して追加します。</p>
       <p class="note">顧客名または物件名を入力してから保存してください。保存データはこの端末のブラウザ内に保存されます。</p>
     </div>
     <div class="panel">
@@ -680,7 +800,7 @@ function renderInputs() {
         ${field("金融機関", "bankName", "text")}
         ${moneyField("物件価格", "purchasePrice")}
         ${moneyField("自己資金（諸費用込み）", "ownCapital")}
-        ${moneyField("借入金額", "loanAmount")}
+        <div class="field"><label>借入金額（自動計算）</label><input data-key="loanAmount" data-format="money" type="text" value="${formatAmountInput(state.loanAmount)}" readonly></div>
         ${field("借入金利（％）", "loanRate", "number", "0.01")}
         ${field("金利上昇開始年（0で上昇なし）", "rateIncreaseStartYear", "number", "1")}
         ${field("金利上昇幅（％）", "rateIncreaseMargin", "number", "0.01")}
@@ -698,7 +818,7 @@ function renderInputs() {
     </div>
     <div class="panel">
       <h2>入力時の注意事項</h2>
-      <p class="note">率は「5」のように整数で入力してください。金利上昇開始年を0にすると金利上昇なしで計算します。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。</p>
+      <p class="note">率は「5」のように整数で入力してください。金利上昇開始年を0にすると金利上昇なしで計算します。固定資産税等は毎年同額として計算します。返済期間は40年まで対応し、元利均等は月利・月数でPMT計算した毎月返済額を12倍しています。入力内容はこの端末に自動保存されます。諸費用で共益費・管理委託手数料を選択している場合は、その金額をそれぞれ年間の運営経費・管理委託料に使用し、この画面の運営経費・管理委託料率より優先します。購入時の諸費用合計にも含まれます。</p>
     </div>`;
 }
 
@@ -707,8 +827,8 @@ function renderRentroll() {
   const a = assumptions();
   const rows = state.rentRoll.map((room, index) => `
     <tr>
-      <td><input data-rent="${index},0" type="text" value="${room[0]}"></td>
-      <td><input data-rent="${index},1" type="text" value="${room[1]}"></td>
+      <td><input data-rent="${index},0" type="text" value="${escapeHtml(room[0])}"></td>
+      <td><input data-rent="${index},1" type="text" value="${escapeHtml(room[1])}"></td>
       <td><input data-rent="${index},2" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(room[2])}"></td>
       <td><select data-rent="${index},3"><option ${room[3] === "入居中" ? "selected" : ""}>入居中</option><option ${room[3] === "空室" ? "selected" : ""}>空室</option></select></td>
     </tr>`);
@@ -724,9 +844,18 @@ function renderRentroll() {
     <div class="panel">${table(["部屋番号", "間取り", "月額家賃", "入居状況"], rows, "compact")}</div>`;
 }
 
+function closingCostOptions(current) {
+  const names = ["", "管理委託手数料", "共益費（BM費、ネット年額利用料、水光熱費）", "銀行融資手数料", "固定資産税精算金", "登記費用", "建物表示登記代金", "火災保険料", "その他"];
+  if (current && !names.includes(current)) names.push(current);
+  return names.map((name) => {
+    const escaped = String(name).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    return `<option value="${escaped}" ${name === current ? "selected" : ""}>${escaped || "選択してください"}</option>`;
+  }).join("");
+}
+
 function renderCosts() {
   state.closingCosts = normalizeClosingCosts(state.closingCosts);
-  const rows = state.closingCosts.map((row, index) => `<tr><td><input data-cost="${index},0" type="text" value="${row[0]}"></td><td><input data-cost="${index},1" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(row[1])}"></td></tr>`);
+  const rows = state.closingCosts.map((row, index) => `<tr><td><select data-cost="${index},0">${closingCostOptions(row[0])}</select></td><td><input data-cost="${index},1" data-format="money" type="text" inputmode="numeric" value="${formatAmountInput(row[1])}"></td></tr>`);
   byId("costs").innerHTML = `
     <div class="panel">
       <h2>諸費用入力</h2>
@@ -791,6 +920,7 @@ function renderSale() {
 }
 
 function renderAll() {
+  updateLoanAmount();
   renderSummary();
   renderProposal();
   renderInputs();
@@ -823,8 +953,17 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.id === "customerDataFile") {
+    importCustomerData(event.target.files?.[0]);
+    return;
+  }
   if (event.target.id === "customerSelect") return;
   if (event.target.dataset.key) state[event.target.dataset.key] = readFormattedInput(event.target);
+  const cost = event.target.dataset.cost;
+  if (cost) {
+    const [index, fieldIndex] = cost.split(",").map(Number);
+    state.closingCosts[index][fieldIndex] = fieldIndex === 1 ? parseNumberInput(event.target.value) : event.target.value;
+  }
   const rent = event.target.dataset.rent;
   if (rent) {
     const [index, fieldIndex] = rent.split(",").map(Number);
@@ -842,6 +981,8 @@ document.addEventListener("focusout", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  if (event.target.id === "exportCustomerDataBtn") exportCustomerData();
+  if (event.target.id === "importCustomerDataBtn") byId("customerDataFile").click();
   if (event.target.id === "saveCustomerBtn") {
     saveCurrentCustomerRecord();
   }

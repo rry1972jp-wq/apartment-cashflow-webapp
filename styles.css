@@ -406,6 +406,29 @@ td:first-child, th:first-child { text-align: left; }
   font-weight: 800;
 }
 
+.proposal-own-capital .proposal-box-value {
+  flex-wrap: wrap;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+.proposal-own-capital .proposal-box-value span {
+  line-height: 1.4;
+}
+
+.proposal-monthly {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.proposal-with-monthly {
+  grid-template-columns: minmax(65px, .8fr) minmax(0, 1.2fr);
+}
+
 .proposal-row {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
