@@ -196,13 +196,30 @@ function validateCustomerTransfer(payload) {
           if (width === 4 && !["入居中", "空室"].includes(row[3])) throw new Error("入居状況が正しくありません。");
         }
       } else if (typeof defaultState[key] === "number" ? typeof value !== "number" || !Number.isFinite(value) : typeof value !== "string" || value.length > 2000) {
-        throw new Error("顧客データに読み込めない値が含まれています。");
+        const labels = {customerName:"顧客名",bankName:"金融機関",propertyName:"物件名",location:"所在地",access:"交通",structure:"構造",landAreaSqm:"土地面積",buildingAreaSqm:"建物面積",buildingCoverage:"建蔽率",floorAreaRatio:"容積率",builtYear:"築年数",purchasePrice:"物件価格",ownCapital:"自己資金",loanAmount:"借入金額",loanRate:"借入金利",loanYears:"返済期間",rateIncreaseStartYear:"金利上昇開始年",rateIncreaseMargin:"金利上昇幅",repaymentType:"返済方式",vacancyRate:"空室率",rentGrowthRate:"家賃上昇率",fixedAssetTax:"固定資産税等",acquisitionTaxEstimate:"不動産取得税概算",annualPropertyTaxEstimate:"固定資産税概算",taxNote:"税金メモ",proposalAcquisitionTax:"顧客提示の不動産取得税",proposalAnnualPropertyTax:"顧客提示の固都税",operatingCost:"運営経費",propertyManagementRate:"管理委託料率",salePriceGrowthRate:"売却価格成長率",sellingCostRate:"売却費用率"};
+        throw new Error(`顧客データの「${labels[key] || key}」に読み込めない値が含まれています。対象の顧客を開いて確認してください。`);
       }
     }
     const normalized = normalizeState({ ...cloneDefault(), ...data });
     if (!customerTitle(normalized)) throw new Error("顧客名・物件名のないデータは読み込めません。");
     return { id: record.id, title: customerTitle(normalized), updatedAt: typeof record.updatedAt === "string" ? record.updatedAt.slice(0, 100) : "", data: normalized };
   });
+}
+
+function prepareCustomerExport(record) {
+  if (!record?.data || typeof record.data !== "object" || Array.isArray(record.data)) return record;
+  const data = { ...record.data };
+  for (const [key, value] of Object.entries(data)) {
+    if (!Object.hasOwn(defaultState, key) || typeof defaultState[key] !== "number" || typeof value !== "string") continue;
+    const text = value.trim();
+    const numeric = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text);
+    const grouped = /^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(text);
+    if (numeric || grouped) {
+      const amount = Number(text.replaceAll(",", ""));
+      if (Number.isFinite(amount)) data[key] = amount;
+    }
+  }
+  return { ...record, data };
 }
 
 function exportCustomerData(selectedOnly = false) {
@@ -212,7 +229,7 @@ function exportCustomerData(selectedOnly = false) {
     if (selectedOnly && !selectedId) return alert("書き出す顧客を「保存済み顧客」から選択してください。");
     const customers = selectedOnly ? records.filter((record) => record.id === selectedId) : records;
     if (!customers.length) return alert(selectedOnly ? "選択した顧客が見つかりません。保存済み顧客を選び直してください。" : "先に「現在の内容を保存」で顧客データを保存してください。");
-    const payload = { format: "ApartmentCashflow.CustomerData", version: 1, exportedAt: new Date().toISOString(), customers };
+    const payload = { format: "ApartmentCashflow.CustomerData", version: 1, exportedAt: new Date().toISOString(), customers: customers.map(prepareCustomerExport) };
     validateCustomerTransfer(payload);
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
