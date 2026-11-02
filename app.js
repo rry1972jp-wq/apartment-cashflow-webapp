@@ -205,16 +205,19 @@ function validateCustomerTransfer(payload) {
   });
 }
 
-function exportCustomerData() {
+function exportCustomerData(selectedOnly = false) {
   try {
-    const customers = loadCustomerRecords();
-    if (!customers.length) return alert("先に「現在の内容を保存」で顧客データを保存してください。");
+    const records = loadCustomerRecords();
+    const selectedId = byId("customerSelect")?.value;
+    if (selectedOnly && !selectedId) return alert("書き出す顧客を「保存済み顧客」から選択してください。");
+    const customers = selectedOnly ? records.filter((record) => record.id === selectedId) : records;
+    if (!customers.length) return alert(selectedOnly ? "選択した顧客が見つかりません。保存済み顧客を選び直してください。" : "先に「現在の内容を保存」で顧客データを保存してください。");
     const payload = { format: "ApartmentCashflow.CustomerData", version: 1, exportedAt: new Date().toISOString(), customers };
     validateCustomerTransfer(payload);
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `apartment-customers-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `${selectedOnly ? "apartment-customer" : "apartment-customers"}-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (error) {
@@ -774,11 +777,12 @@ function renderInputs() {
         </div>
       </div>
       <div class="actions-row">
-        <button id="exportCustomerDataBtn" type="button">顧客データを書き出す</button>
+        <button id="exportSelectedCustomerDataBtn" type="button">選択した顧客を書き出す</button>
+        <button id="exportCustomerDataBtn" type="button">全顧客データを書き出す</button>
         <button id="importCustomerDataBtn" type="button">顧客データを読み込む</button>
       </div>
       <input id="customerDataFile" type="file" accept=".json,application/json" hidden>
-      <p class="note">保存済み顧客をファイルに書き出し、別PCのこのアプリで読み込めます。編集中の内容は先に「現在の内容を保存」を押してください。読み込みは既存データを残して追加します。</p>
+      <p class="note">「保存済み顧客」で対象を選び、「選択した顧客を書き出す」でその1件を別PCへ渡せます。「全顧客データを書き出す」は保存済みの全件が対象です。編集中の内容は先に「現在の内容を保存」を押してください。読み込みは既存データを残して追加します。</p>
       <p class="note">顧客名または物件名を入力してから保存してください。保存データはこの端末のブラウザ内に保存されます。</p>
     </div>
     <div class="panel">
@@ -983,6 +987,7 @@ document.addEventListener("focusout", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  if (event.target.id === "exportSelectedCustomerDataBtn") exportCustomerData(true);
   if (event.target.id === "exportCustomerDataBtn") exportCustomerData();
   if (event.target.id === "importCustomerDataBtn") byId("customerDataFile").click();
   if (event.target.id === "saveCustomerBtn") {
